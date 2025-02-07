@@ -106,6 +106,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         default_score = 0 # Value of the passed-in state. Needs to be computed.
     
         return [default_score, "my own optional stuff", "more of my stuff"]
+
         # Only the score is required here but other stuff can be returned
         # in the list, after the score, in case you want to pass info
         # back from recursive calls that might be used in your utterances,
@@ -115,6 +116,14 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         print('calling static_eval. Its value needs to be computed!')
         # Values should be higher when the states are better for X,
         # lower when better for O.
+
+        # for 4 directions, start k-1 left, top, diag, diag:
+        #     if find x, note num previous k-1 or end blanks and future k-1 or end blanks + 10n;
+        #     if run into - or o before can have k, *0;
+        #     if have another x, + 10^(k-d), add k - 1 blanks from other side;
+
+        # if have k x win, + 10k^k
+
         return 0
  
 # OPTIONAL THINGS TO KEEP TRACK OF:
