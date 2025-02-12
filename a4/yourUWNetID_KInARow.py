@@ -124,67 +124,77 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
         # if have k x win, + 10k^k
 
-        # left
-        total_score = 0
-        # each row
-        for m in range(state.m):
-            count = 0
-            numX = 1
-            blanks_before = 0
-            blanks_after = 0
-            blanks_middle = 0
-            row_score = 0
-            k = state.k
-            # each square
-            for n in range(state.n):
-                mark = state[m][n]
+        # # left
+        # total_score = 0
+        # # each row
+        # for m in range(state.m):
+        #     count = 0
+        #     numX = 1
+        #     blanks_before = 0
+        #     blanks_after = 0
+        #     blanks_middle = 0
+        #     row_score = 0
+        #     k = state.k
+        #     # each square
+        #     for n in range(state.n):
+        #         mark = state[m][n]
 
-                # if run into X
-                if (mark == 'X'):
-                    numX += 1
+        #         # if run into X
+        #         if (mark == 'X'):
+        #             numX += 1
 
-                    # if first X, record blanks before
-                    if (numX == 1):
-                        if (count >= k):
-                            blanks_before += k - 1
-                        else:
-                            blanks_before += count
-                    # if have X already, record middle blanks
-                    else:
-                        if (count >= k):
-                            blanks_middle += count
-                        else:
-                            blanks_middle += count
-                    count = 0
+        #             # if first X, record blanks before
+        #             if (numX == 1):
+        #                 if (count >= k):
+        #                     blanks_before += k - 1
+        #                 else:
+        #                     blanks_before += count
+        #             # if have X already, record middle blanks
+        #             else:
+        #                 if (count >= k):
+        #                     blanks_middle += count
+        #                 else:
+        #                     blanks_middle += count
+        #             count = 0
 
-                # if run into O
-                elif (mark == 'O'):
-                    # if has X and blanks before X + blanks after X + blanks between X's is not greater than k, can't win so reset
-                    if (numX > 0 & count + blanks_before + blanks_middle < k - numX):
-                        blanks_before = 0
-                        numX = 0
+        #         # if run into O
+        #         elif (mark == 'O'):
+        #             # if has X and blanks before X + blanks after X + blanks between X's is not greater than k, can't win so reset
+        #             if (numX > 0 & count + blanks_before + blanks_middle < k - numX):
+        #                 blanks_before = 0
+        #                 numX = 0
                     
-                # if forbidden
-                elif (mark == '-'):
-                    # if has X and blanks before X + blanks after X + blanks between X's is not greater than k, can't win so reset
-                    if (numX > 0 & count + blanks_before + blanks_middle < k - numX):
-                        blanks_before = 0
-                        numX = 0
+        #         # if forbidden
+        #         elif (mark == '-'):
+        #             # if has X and blanks before X + blanks after X + blanks between X's is not greater than k, can't win so reset
+        #             if (numX > 0 & count + blanks_before + blanks_middle < k - numX):
+        #                 blanks_before = 0
+        #                 numX = 0
 
-                # blank, increase blank count
-                else:
-                    count += 1
+        #         # blank, increase blank count
+        #         else:
+        #             count += 1
 
-                # if counted k-1 blanks after current X, give score and reset
-                if (numX > 0 & count > k - 1):
-                    blanks_after = count
-                    numX = 0
-                    count = 0
-                    row_score += blanks_before + blanks_after * 10 * numX
-                    blanks_before = 0
-                    blanks_after = 0
+        #         # if counted k-1 blanks after current X, give score and reset
+        #         if (numX > 0 & count > k - 1):
+        #             blanks_after = count
+        #             numX = 0
+        #             count = 0
+        #             row_score += blanks_before + blanks_after * 10 * numX
+        #             blanks_before = 0
+        #             blanks_after = 0
 
-        return total_score
+        # return total_score
+
+        # ROUND 2
+        # 1. Generate all possible k-in-a-rows as Objs/sets
+        # 2. Map each coordinate to their possible k-in-a-rows, where coordinates are keys and k-in-a-rows are values
+        # 3. User put X on coordinate, look up coordinate, numX+=1 for reach k-in-a-rows
+        # 4. User put O on coordinate, look up coordinate, numO+=1 for each k-in-a-rows
+        # 5. if look up coordinate numX > 0 and == numO, delete possibility
+        # 6. Calculate score, 10^numX * numk-in-a-rows - 10^numO * numk-in-a-rows
+        # 7. If numX = k - 1 ++++++
+        # 8. If numX = k ++++++++++++++++++++++++
  
 # OPTIONAL THINGS TO KEEP TRACK OF:
 
