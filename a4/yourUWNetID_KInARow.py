@@ -41,6 +41,10 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         self.zobrist_table_num_hits_this_turn = -1
         self.current_game_type = None
 
+        self.initial_turn = True
+        self.kInARowSet = {}
+        self.coodinateMap = {}
+
     def introduce(self):
         intro = '\nMy name is Templatus Skeletus.\n'+\
             '"An instructor" made me.\n'+\
@@ -203,6 +207,30 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
             #     If intersection >=4, guarenteed win
             #   Filter k-1 in a rows
             #     If intersection >=2, guarenteed win
+
+        if (self.initial_turn == True):
+
+            # loop through horizontal
+            for m in range(state.m):
+                 for n in range(state.n):
+                        
+                        # add to self.kInARowSet = {}
+                        #        self.coodinateMap = {}
+
+                        if state[m][n] == 'X':
+                            self.kInARowSet = {}
+                            self.coodinateMap = {}
+
+            # loop through vertical
+            # loop through diag left
+            # loop through diag right
+
+            self.initial_turn = False
+        else:
+            makeUserMove(state)
+
+def makeUserMove(state):
+
 
  
 # OPTIONAL THINGS TO KEEP TRACK OF:
