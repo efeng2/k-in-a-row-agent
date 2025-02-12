@@ -117,14 +117,74 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         # Values should be higher when the states are better for X,
         # lower when better for O.
 
-        # for 4 directions, start k-1 left, top, diag, diag:
+        # for 4 directions, start left, top, diag, diag:
         #     if find x, note num previous k-1 or end blanks and future k-1 or end blanks + 10n;
         #     if run into - or o before can have k, *0;
         #     if have another x, + 10^(k-d), add k - 1 blanks from other side;
 
         # if have k x win, + 10k^k
 
-        return 0
+        # left
+        total_score = 0
+        # each row
+        for m in range(state.m):
+            count = 0
+            numX = 1
+            blanks_before = 0
+            blanks_after = 0
+            blanks_middle = 0
+            row_score = 0
+            k = state.k
+            # each square
+            for n in range(state.n):
+                mark = state[m][n]
+
+                # if run into X
+                if (mark == 'X'):
+                    numX += 1
+
+                    # if first X, record blanks before
+                    if (numX == 1):
+                        if (count >= k):
+                            blanks_before += k - 1
+                        else:
+                            blanks_before += count
+                    # if have X already, record middle blanks
+                    else:
+                        if (count >= k):
+                            blanks_middle += count
+                        else:
+                            blanks_middle += count
+                    count = 0
+
+                # if run into O
+                elif (mark == 'O'):
+                    # if has X and blanks before X + blanks after X + blanks between X's is not greater than k, can't win so reset
+                    if (numX > 0 & count + blanks_before + blanks_middle < k - numX):
+                        blanks_before = 0
+                        numX = 0
+                    
+                # if forbidden
+                elif (mark == '-'):
+                    # if has X and blanks before X + blanks after X + blanks between X's is not greater than k, can't win so reset
+                    if (numX > 0 & count + blanks_before + blanks_middle < k - numX):
+                        blanks_before = 0
+                        numX = 0
+
+                # blank, increase blank count
+                else:
+                    count += 1
+
+                # if counted k-1 blanks after current X, give score and reset
+                if (numX > 0 & count > k - 1):
+                    blanks_after = count
+                    numX = 0
+                    count = 0
+                    row_score += blanks_before + blanks_after * 10 * numX
+                    blanks_before = 0
+                    blanks_after = 0
+
+        return total_score
  
 # OPTIONAL THINGS TO KEEP TRACK OF:
 
