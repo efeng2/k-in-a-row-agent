@@ -193,8 +193,13 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         # 4. User put O on coordinate, look up coordinate, numO+=1 for each k-in-a-rows
         # 5. if look up coordinate numX > 0 and == numO, delete possibility
         # 6. Calculate score, 10^numX * numk-in-a-rows - 10^numO * numk-in-a-rows
-        # 7. If numX = k - 1 ++++++
-        # 8. If numX = k ++++++++++++++++++++++++
+        # 8. If numX = k Win
+        # Win check
+        #   Filter k-2 in a rows
+        #     If intersection >=4, guarenteed win
+        #   Filter k-1 in a rows
+        #     If intersection >=2, guarenteed win
+
  
 # OPTIONAL THINGS TO KEEP TRACK OF:
 
