@@ -43,7 +43,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
         self.initial_turn = True
         self.kInARowSet = {}
-        self.coodinateMap = {}
+        self.coodinateDict = {}
 
     def introduce(self):
         intro = '\nMy name is Templatus Skeletus.\n'+\
@@ -115,82 +115,65 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         # in the list, after the score, in case you want to pass info
         # back from recursive calls that might be used in your utterances,
         # etc. 
- 
+
+    def straightLoop(self, sideA, sideB, state):
+        k = state.k
+
+        total_score = 0
+        blank_count = 0
+
+        for m in range(sideA):
+            for n in range(sideB):
+                
+                # coordinate (m, n), increase blank count
+                blank_count += 1
+
+                # if run into "-"
+                if state[m][n] == "-":
+                    blank_count = 0
+
+                # if possible k in a row, create new kInARow and add all previous coordinates to set
+                if blank_count == k:
+                    newKInARow = {}
+                    newKInARow.append({'numX': 0, 'numY': 0})
+                    for blank in range(blank_count):
+                        newKInARow.add((m, n - blank))
+                        
+                        # add set as value to every coordinate in coodinateDict
+                        self.coodinateDict[(m, n - blank)].append(newKInARow)
+                    blank_count += -1
+
+                # If X
+                if state[m][n] == 'X':
+                    # Every kInARow with this coordinate, increase numX count
+                    for kInaRow in self.coodinateDict[(m, n)]:
+                        # delete if kInaRow contains numO
+                        if kInaRow['numO'] > 0:
+                            del kInaRow
+                        else:
+                            kInaRow['numX'] += 1
+                            total_score += 10 ** kInaRow['numX']
+                    
+                # If O
+                if state[m][n] == 'O':
+                    # Every kInARow with this coordinate, increase numO count
+                    for kInaRow in self.coodinateDict[(m, n)]:
+                        # delete if kInaRow contains numO
+                        if kInaRow['numX'] > 0:
+                            del kInaRow
+                        else:
+                            kInaRow['numO'] += 1
+                            total_score += -10 ** kInaRow['numO']
+
+        return total_score
+    
+    # def makeUserMove(state):
+    
     def static_eval(self, state, game_type=None):
         print('calling static_eval. Its value needs to be computed!')
         # Values should be higher when the states are better for X,
         # lower when better for O.
 
-        # for 4 directions, start left, top, diag, diag:
-        #     if find x, note num previous k-1 or end blanks and future k-1 or end blanks + 10n;
-        #     if run into - or o before can have k, *0;
-        #     if have another x, + 10^(k-d), add k - 1 blanks from other side;
-
-        # if have k x win, + 10k^k
-
-        # # left
-        # total_score = 0
-        # # each row
-        # for m in range(state.m):
-        #     count = 0
-        #     numX = 1
-        #     blanks_before = 0
-        #     blanks_after = 0
-        #     blanks_middle = 0
-        #     row_score = 0
-        #     k = state.k
-        #     # each square
-        #     for n in range(state.n):
-        #         mark = state[m][n]
-
-        #         # if run into X
-        #         if (mark == 'X'):
-        #             numX += 1
-
-        #             # if first X, record blanks before
-        #             if (numX == 1):
-        #                 if (count >= k):
-        #                     blanks_before += k - 1
-        #                 else:
-        #                     blanks_before += count
-        #             # if have X already, record middle blanks
-        #             else:
-        #                 if (count >= k):
-        #                     blanks_middle += count
-        #                 else:
-        #                     blanks_middle += count
-        #             count = 0
-
-        #         # if run into O
-        #         elif (mark == 'O'):
-        #             # if has X and blanks before X + blanks after X + blanks between X's is not greater than k, can't win so reset
-        #             if (numX > 0 & count + blanks_before + blanks_middle < k - numX):
-        #                 blanks_before = 0
-        #                 numX = 0
-                    
-        #         # if forbidden
-        #         elif (mark == '-'):
-        #             # if has X and blanks before X + blanks after X + blanks between X's is not greater than k, can't win so reset
-        #             if (numX > 0 & count + blanks_before + blanks_middle < k - numX):
-        #                 blanks_before = 0
-        #                 numX = 0
-
-        #         # blank, increase blank count
-        #         else:
-        #             count += 1
-
-        #         # if counted k-1 blanks after current X, give score and reset
-        #         if (numX > 0 & count > k - 1):
-        #             blanks_after = count
-        #             numX = 0
-        #             count = 0
-        #             row_score += blanks_before + blanks_after * 10 * numX
-        #             blanks_before = 0
-        #             blanks_after = 0
-
-        # return total_score
-
-        # ROUND 2
         # If initial state:
             # 1. Generate all possible k-in-a-rows as Objs/sets for m * n
             # 2. Map each coordinate to their possible k-in-a-rows, where coordinates are keys and k-in-a-rows are values
@@ -207,21 +190,16 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
             #     If intersection >=4, guarenteed win
             #   Filter k-1 in a rows
             #     If intersection >=2, guarenteed win
+        
+        total_score = 0
 
         if (self.initial_turn == True):
 
             # loop through horizontal
-            for m in range(state.m):
-                 for n in range(state.n):
-                        
-                        # add to self.kInARowSet = {}
-                        #        self.coodinateMap = {}
-
-                        if state[m][n] == 'X':
-                            self.kInARowSet = {}
-                            self.coodinateMap = {}
-
+            total_score += self.straightLoop(state.m, state.n, state)
             # loop through vertical
+            total_score += self.straightLoop(state.n, state.m, state)
+
             # loop through diag left
             # loop through diag right
 
@@ -229,9 +207,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         else:
             makeUserMove(state)
 
-def makeUserMove(state):
-
-
+    
  
 # OPTIONAL THINGS TO KEEP TRACK OF:
 
