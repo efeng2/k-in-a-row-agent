@@ -132,7 +132,8 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                 if state.board[m][n] == "-":
                     blank_count = 0
 
-                self.coodinateDict[(m, n)] = [] 
+                if ((m, n) not in self.coodinateDict):
+                    self.coodinateDict[(m, n)] = [] 
 
                 # if possible k in a row, create new kInARow and add all previous coordinates to set
                 if blank_count == k:
