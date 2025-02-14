@@ -116,8 +116,8 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         # back from recursive calls that might be used in your utterances,
         # etc. 
 
-    def straightLoop(self, sideA, sideB, state):
-        k = state.k
+    def straightLoop(self, sideA, sideB, game_type, state):
+        k = game_type.k
 
         total_score = 0
         blank_count = 0
@@ -129,7 +129,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                 blank_count += 1
 
                 # if run into "-"
-                if state[m][n] == "-":
+                if state.board[m][n] == "-":
                     blank_count = 0
 
                 # if possible k in a row, create new kInARow and add all previous coordinates to set
@@ -144,7 +144,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                     blank_count += -1
 
                 # If X
-                if state[m][n] == 'X':
+                if state.board[m][n] == 'X':
                     # Every kInARow with this coordinate, increase numX count
                     for kInaRow in self.coodinateDict[(m, n)]:
                         # delete if kInaRow contains numO
@@ -155,7 +155,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                             total_score += 10 ** kInaRow['numX']
                     
                 # If O
-                if state[m][n] == 'O':
+                if state.board[m][n] == 'O':
                     # Every kInARow with this coordinate, increase numO count
                     for kInaRow in self.coodinateDict[(m, n)]:
                         # delete if kInaRow contains numO
@@ -165,9 +165,12 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                             kInaRow['numO'] += 1
                             total_score += -10 ** kInaRow['numO']
 
+                # reset blank count when moving to the next row
+                blank_count = 0
         return total_score
     
-    # def makeUserMove(state):
+    def makeUserMove(state):
+        return 0
     
     def static_eval(self, state, game_type=None):
         print('calling static_eval. Its value needs to be computed!')
@@ -196,16 +199,17 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         if (self.initial_turn == True):
 
             # loop through horizontal
-            total_score += self.straightLoop(state.m, state.n, state)
+            total_score += self.straightLoop(game_type.m, game_type.n, game_type, state)
             # loop through vertical
-            total_score += self.straightLoop(state.n, state.m, state)
+            total_score += self.straightLoop(game_type.n, game_type.m, game_type, state)
 
             # loop through diag left
             # loop through diag right
 
             self.initial_turn = False
+
         else:
-            makeUserMove(state)
+            self.makeUserMove(state)
 
     
  
