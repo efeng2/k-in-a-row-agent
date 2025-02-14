@@ -8,16 +8,15 @@ l = len(new_list[0])
 
 for i in range(-l,h):
     diag = []
-    for j in range(l):
-        if i < 0:
-            j = -i-1
-            i = i + l - j
 
-        if i < h and j < l:
+    for j in range(l):
+
+        if i+j<h and i+j>=0:
             index = (i+j,j)
         else:
-            break
+            continue
         diag.append(new_list[index[0]][index[1]])
-    diags.append(diag)
+    if diag:
+        diags.append(diag)
 
 print(diags)
