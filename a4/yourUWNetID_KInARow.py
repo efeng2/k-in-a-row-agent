@@ -132,44 +132,53 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                 if state.board[m][n] == "-":
                     blank_count = 0
 
+                self.coodinateDict[(m, n)] = [] 
+
                 # if possible k in a row, create new kInARow and add all previous coordinates to set
                 if blank_count == k:
-                    newKInARow = {}
-                    newKInARow.append({'numX': 0, 'numY': 0})
+                    newKInARow = []
+                    coordSet = set()
+                    newKInARow.append(coordSet)
+
+                    # append num X/O
+                    newKInARow.append(0)
+
                     for blank in range(blank_count):
-                        newKInARow.add((m, n - blank))
+                        newKInARow[0].add((m, n - blank))
+
+                        self.coodinateDict[(m, n - blank)].append(newKInARow)
                         
                         # add set as value to every coordinate in coodinateDict
-                        self.coodinateDict[(m, n - blank)].append(newKInARow)
                     blank_count += -1
 
-                # If X
-                if state.board[m][n] == 'X':
-                    # Every kInARow with this coordinate, increase numX count
-                    for kInaRow in self.coodinateDict[(m, n)]:
-                        # delete if kInaRow contains numO
-                        if kInaRow['numO'] > 0:
-                            del kInaRow
-                        else:
-                            kInaRow['numX'] += 1
-                            total_score += 10 ** kInaRow['numX']
+                # # If X
+                # if state.board[m][n] == 'X':
+                #     # Every kInARow with this coordinate, increase numX count
+                #     for kInaRow in self.coodinateDict[(m, n)]:
+                #         # delete if kInaRow contains numO
+                #         if kInaRow['numO'] > 0:
+                #             del kInaRow
+                #         else:
+                #             kInaRow['numX'] += 1
+                #             total_score += 10 ** kInaRow['numX']
                     
-                # If O
-                if state.board[m][n] == 'O':
-                    # Every kInARow with this coordinate, increase numO count
-                    for kInaRow in self.coodinateDict[(m, n)]:
-                        # delete if kInaRow contains numO
-                        if kInaRow['numX'] > 0:
-                            del kInaRow
-                        else:
-                            kInaRow['numO'] += 1
-                            total_score += -10 ** kInaRow['numO']
+                # # If O
+                # if state.board[m][n] == 'O':
+                #     # Every kInARow with this coordinate, increase numO count
+                #     for kInaRow in self.coodinateDict[(m, n)]:
+                #         # delete if kInaRow contains numO
+                #         if kInaRow['numX'] > 0:
+                #             del kInaRow
+                #         else:
+                #             kInaRow['numO'] += 1
+                #             total_score += -10 ** kInaRow['numO']
 
-                # reset blank count when moving to the next row
-                blank_count = 0
+                # # reset blank count when moving to the next row
+            blank_count = 0
+        print(self.coodinateDict)
         return total_score
     
-    def makeUserMove(state):
+    def makeUserMove(self, state):
         return 0
     
     def static_eval(self, state, game_type=None):
@@ -204,12 +213,15 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
             total_score += self.straightLoop(game_type.n, game_type.m, game_type, state)
 
             # loop through diag left
+
             # loop through diag right
 
             self.initial_turn = False
 
         else:
             self.makeUserMove(state)
+
+        return total_score
 
     
  
