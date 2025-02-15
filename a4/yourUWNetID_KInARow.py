@@ -108,6 +108,9 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         print("Calling minimax. We need to implement its body.")
 
         default_score = 0 # Value of the passed-in state. Needs to be computed.
+        if depth_remaining != 0:
+            minimax()
+
     
         return [default_score, "my own optional stuff", "more of my stuff"]
 
@@ -182,10 +185,13 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
     def makeUserMove(self, state):
         return 0
     
-    def static_eval(self, state, game_type=None):
+    def static_eval(self, state, game_type=None, kinarows=None):
         print('calling static_eval. Its value needs to be computed!')
         # Values should be higher when the states are better for X,
         # lower when better for O.
+        if kinarows == None:
+
+
 
         # If initial state:
             # 1. Generate all possible k-in-a-rows as Objs/sets for m * n
@@ -217,7 +223,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
             # loop through diag right
 
-            self.initial_turn = False
+            self.initial_turn = True
 
         else:
             self.makeUserMove(state)

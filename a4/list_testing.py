@@ -1,4 +1,6 @@
+import time
 
+start = time.time()
 new_list = [[1,  2,  3,  4],
             [5,  6,  7,  8],
             [9, 10, 11, 12]]
@@ -19,4 +21,8 @@ for i in range(-l,h):
     if diag:
         diags.append(diag)
 
+end = time.time()
+
 print(diags)
+print((end - start)*10**3)
+
