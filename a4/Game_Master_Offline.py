@@ -189,8 +189,9 @@ def test():
 
     #import yourUWNetID_KInARow as h
     import RandomPlayer as h
-    px = h.OurAgent()
-    po = h.OurAgent(twin=True)
+    import Agent_Copy as b
+    px = b.OurAgent()
+    po = h.OurAgent(twin=False)
     set_players(px, po)
     print("Players are set.")
     print("Now let's run the game.")
