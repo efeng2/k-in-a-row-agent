@@ -37,7 +37,7 @@ python3 autograder.py
 '''
 
 import game_types
-import yourUWNetID_KInARow as agent_module
+import Agent_Copy as agent_module
 import spec_static_by_table
 
 

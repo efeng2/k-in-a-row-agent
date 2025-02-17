@@ -242,7 +242,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                     count += 1
                 if state[i][j] == 'O':
                     count -= 1
-            total_score += 10^count
+            total_score += 10 ** count
 
         return total_score
     
