@@ -24,6 +24,10 @@ import time # You'll probably need this to avoid losing a
  # game due to exceeding a time limit.
 
 # Create your own type of agent by subclassing KAgent:
+# Constants
+BETA_DEFAULT = -100000
+ALPHA_DEFAULT = 100000
+
 
 class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
     # knows how to instantiate your agent class.
@@ -97,15 +101,9 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
         print("code to compute a good move should go here.")
 
-        # new_state = current_state # This is not allowed, and even if
-        # it were allowed, the newState should be a deep COPY of the old.
-
         possibleMoves = successors_and_moves(current_state)
         myMove = chooseMove(possibleMoves)
         myUtterance = self.nextUtterance()
-
-        # if win, say: BOT VICTORY
-        # if lose, say: NOOO BOT EXPLOSEd
 
         newState, newMove = myMove
         print("Returning from make_move")
@@ -129,82 +127,46 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
             pruning=False,
             alpha=None,
             beta=None):
-        print("Calling minimax. We need to implement its body.")
+        print("Calling minimax.")
 
-        # default_score = 0 # Value of the passed-in state. Needs to be computed.
-        computed_score = self.static_eval(state)
+        if (depth_remaining == 0):
+            node_value = self.static_eval(state)
+            return [node_value]
+        
+        # If Maximizing Node
+        if state.whose_move == 'X':
+            max_value = BETA_DEFAULT
 
-        # rescursion search child nodes
-    
-        return [computed_score, "my own optional stuff", "more of my stuff"]
+            # traverse all possible options
+            for node in state:
+                node_value = self.minimax(node, depth_remaining - 1, pruning, alpha, beta)[0]
+                max_value = max(node_value, max_value)
+                alpha = max(alpha, max_value)
+
+                # if pruning is true and beta pass alpha, prune node
+                if pruning == True & beta <= alpha:
+                    break
+            return max_value
+        
+        # If Minimizing Node
+        else:
+            max_value = ALPHA_DEFAULT
+
+            # traverse all possible options
+            for node in state:
+                node_value = self.minimax(node, depth_remaining - 1, pruning, alpha, beta)[0]
+                max_value = min(node_value, max_value)
+                beta = min(beta, max_value)
+
+                # if pruning is true and beta pass alpha, prune node
+                if pruning == True & beta <= alpha:
+                    break
+            return max_value
 
         # Only the score is required here but other stuff can be returned
         # in the list, after the score, in case you want to pass info
         # back from recursive calls that might be used in your utterances,
         # etc. 
-
-    def straightLoop(self, sideA, sideB, game_type, state):
-        k = game_type.k
-
-        total_score = 0
-        blank_count = 0
-
-        for m in range(sideA):
-            for n in range(sideB):
-                
-                # coordinate (m, n), increase blank count
-                blank_count += 1
-
-                # if run into "-"
-                if state.board[m][n] == "-":
-                    blank_count = 0
-
-                if ((m, n) not in self.coodinateDict):
-                    self.coodinateDict[(m, n)] = [] 
-
-                # if possible k in a row, create new kInARow and add all previous coordinates to set
-                if blank_count == k:
-                    newKInARow = []
-                    coordSet = set()
-                    newKInARow.append(coordSet)
-
-                    # append num X/O
-                    newKInARow.append(0)
-
-                    for blank in range(blank_count):
-                        newKInARow[0].add((m, n - blank))
-
-                        self.coodinateDict[(m, n - blank)].append(newKInARow)
-                        
-                        # add set as value to every coordinate in coodinateDict
-                    blank_count += -1
-
-                # # If X
-                # if state.board[m][n] == 'X':
-                #     # Every kInARow with this coordinate, increase numX count
-                #     for kInaRow in self.coodinateDict[(m, n)]:
-                #         # delete if kInaRow contains numO
-                #         if kInaRow['numO'] > 0:
-                #             del kInaRow
-                #         else:
-                #             kInaRow['numX'] += 1
-                #             total_score += 10 ** kInaRow['numX']
-                    
-                # # If O
-                # if state.board[m][n] == 'O':
-                #     # Every kInARow with this coordinate, increase numO count
-                #     for kInaRow in self.coodinateDict[(m, n)]:
-                #         # delete if kInaRow contains numO
-                #         if kInaRow['numX'] > 0:
-                #             del kInaRow
-                #         else:
-                #             kInaRow['numO'] += 1
-                #             total_score += -10 ** kInaRow['numO']
-
-                # # reset blank count when moving to the next row
-            blank_count = 0
-        print(self.coodinateDict)
-        return total_score
     
     def makeUserMove(self, state):
         return 0
@@ -232,22 +194,25 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
             #     If intersection >=2, guarenteed win
         
         total_score = 0
-
-        if (self.initial_turn == True):
-
-            # loop through horizontal
-            total_score += self.straightLoop(game_type.m, game_type.n, game_type, state)
-            # loop through vertical
-            total_score += self.straightLoop(game_type.n, game_type.m, game_type, state)
-
-            # loop through diag left
-
-            # loop through diag right
-
-            self.initial_turn = False
-
+        m = 0
+        n = 0
+        
+        if game_type != None:
+            m = game_type.m
+            n = game_type.n
         else:
-            self.makeUserMove(state)
+            m = state.m
+            n = state.n
+
+        # simple static eval for now...
+        for i in range(m):
+            count = 0
+            for j in range(n):
+                if state[i][j] == 'X':
+                    count += 1
+                if state[i][j] == 'O':
+                    count -= 1
+            total_score += 10^count
 
         return total_score
     
