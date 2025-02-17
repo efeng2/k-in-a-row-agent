@@ -25,8 +25,16 @@ import time # You'll probably need this to avoid losing a
 
 # Create your own type of agent by subclassing KAgent:
 # Constants
-BETA_DEFAULT = -100000
-ALPHA_DEFAULT = 100000
+BETA_DEFAULT = -10000000
+ALPHA_DEFAULT = 10000000
+MINIMAX_DEPTH = 2
+
+# For utterances to change according to game state
+WIN_THRESHOLD = 100000
+LOSE_THRESHOLD = 100000
+NUETRAL_THRESHOLD = 5000
+
+
 
 
 class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
@@ -83,7 +91,6 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
        print("I CAN WIN AT", game_type.long_name)
        self.my_past_utterances = []
        # self.opponent_past_utterances = []
-       self.repeat_count = 0
        self.utt_count = 0
        if self.twin: self.utt_count = 5 # Offset the twin's utterances.
            
@@ -99,80 +106,103 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                   special_static_eval_fn=None):
         print("make_move has been called")
 
-        print("code to compute a good move should go here.")
+        myMove = self.chooseMove(current_state)
+        minimax_value, newState, newMove = myMove
 
-        possibleMoves = successors_and_moves(current_state)
-        myMove = chooseMove(possibleMoves)
-        myUtterance = self.nextUtterance()
+        myUtterance = self.nextUtterance(minimax_value)
 
-        newState, newMove = myMove
-        print("Returning from make_move")
         return [[newMove, newState], myUtterance]
     
-    def nextUtterance(self):
-        if self.repeat_count > 1: return "I'M TESTING."
-        n = len(UTTERANCE_BANK)
-        if self.utt_count == n:
-            self.utt_count = 0
-            self.repeat_count += 1
-        this_utterance = UTTERANCE_BANK[self.utt_count]
-        self.utt_count += 1
+    def nextUtterance(self, minimax_value):
+        # if self.repeat_count > 1: return "I'M TESTING."
+        utterances = UTTERANCE_BANK
+
+        if minimax_value > WIN_THRESHOLD:
+            return WIN_UTTERANCE
+        elif minimax_value > NUETRAL_THRESHOLD:
+            utterances = HAPPY_UTTERANCE
+        elif minimax_value < - NUETRAL_THRESHOLD:
+            utterances = SAD_UTTERANCE
+        elif minimax_value < - LOSE_THRESHOLD:
+            return LOSE_UTTERANCE
+
+        n = len(utterances)
+        #if self.utt_count == n:
+            #self.utt_count = 0
+        random_index = randint(0, n-1)
+
+        this_utterance = utterances[random_index]
+        #self.utt_count += 1
         return this_utterance
    
 
     # The main adversarial search function:
     def minimax(self,
             state,
+            move,
             depth_remaining,
             pruning=False,
             alpha=None,
             beta=None):
-        print("Calling minimax.")
+        # print("Calling minimax with " + str(state.whose_move) + str(state) + str(move))
 
-        if (depth_remaining == 0):
-            node_value = self.static_eval(state)
-            return [node_value]
+        # generate sucessors
+        child_nodes, moves = successors_and_moves(state)
         
+        if (depth_remaining == 0 or child_nodes==[]):
+            node_value = self.static_eval(state)
+
+            # return node's value and which move node it came from
+            return [node_value, state, move]
+
         # If Maximizing Node
         if state.whose_move == 'X':
             max_value = BETA_DEFAULT
 
             # traverse all possible options
-            for node in state:
-                node_value = self.minimax(node, depth_remaining - 1, pruning, alpha, beta)[0]
+            for index in range(len(child_nodes)):
+                node_value, node_state, node_move = self.minimax(child_nodes[index], moves[index], depth_remaining - 1, pruning, alpha, beta)
+
                 max_value = max(node_value, max_value)
                 alpha = max(alpha, max_value)
 
                 # if pruning is true and beta pass alpha, prune node
-                if pruning == True & beta <= alpha:
+                if pruning == True and beta <= alpha:
                     break
-            return max_value
+            return [max_value, node_state, node_move]
         
         # If Minimizing Node
         else:
             max_value = ALPHA_DEFAULT
 
             # traverse all possible options
-            for node in state:
-                node_value = self.minimax(node, depth_remaining - 1, pruning, alpha, beta)[0]
+            for index in range(len(child_nodes)):
+                node_value, node_state, node_move = self.minimax(child_nodes[index], moves[index], depth_remaining - 1, pruning, alpha, beta)
+
                 max_value = min(node_value, max_value)
                 beta = min(beta, max_value)
 
                 # if pruning is true and beta pass alpha, prune node
-                if pruning == True & beta <= alpha:
+                if pruning == True and beta <= alpha:
                     break
-            return max_value
+            return [max_value, node_state, node_move]
 
         # Only the score is required here but other stuff can be returned
         # in the list, after the score, in case you want to pass info
         # back from recursive calls that might be used in your utterances,
         # etc. 
-    
-    def makeUserMove(self, state):
-        return 0
+
+    # Choose Move based on minimax
+    def chooseMove(self, root_state):
+
+        # run minimax
+        minimax_value, state, move = self.minimax(root_state, (0,0), MINIMAX_DEPTH, True, ALPHA_DEFAULT, BETA_DEFAULT)
+
+        my_choice = [minimax_value, state, move]
+        return my_choice
     
     def static_eval(self, state, game_type=None):
-        print('calling static_eval. Its value needs to be computed!')
+        print('calling static_eval.')
         # Values should be higher when the states are better for X,
         # lower when better for O.
 
@@ -200,9 +230,9 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         if game_type != None:
             m = game_type.m
             n = game_type.n
-        else:
-            m = state.m
-            n = state.n
+        # else:
+        #     m = state.m
+        #     n = state.n
 
         # simple static eval for now...
         for i in range(m):
@@ -221,16 +251,6 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 def other(p):
     if p=='X': return 'O'
     return 'X'
-
-# Randomly choose a move.
-def chooseMove(statesAndMoves):
-    states, moves = statesAndMoves
-    if states==[]: return None
-
-    
-    random_index = randint(0, len(states)-1)
-    my_choice = [states[random_index], moves[random_index]]
-    return my_choice
 
 # The following is a Python "generator" function that creates an
 # iterator to provide one move and new state at a time.
@@ -257,6 +277,7 @@ def successors_and_moves(state):
     for item in move_gen(state):
         moves.append(item[0])
         new_states.append(item[1])
+
     return [new_states, moves]
 
 # Performa a move to get a new state.
@@ -274,9 +295,9 @@ WIN_UTTERANCE = ["BOT WIN"]
 
 LOSE_UTTERANCE = ["BOT LOSE"]
 
-SAD_UTTERANCE = ["BOT SAD"]
+SAD_UTTERANCE = ["BOT SAD", "BOT SADDER"]
 
-HAPPY_UTTERANCE = ["BOT HAPPY"]
+HAPPY_UTTERANCE = ["BOT HAPPY", "BOT HAPPIER"]
 
 def test():
     global GAME_TYPE
