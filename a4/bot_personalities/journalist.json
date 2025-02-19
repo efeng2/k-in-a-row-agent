@@ -1,58 +1,86 @@
 {
   "journalist_bot": {
     "start_of_game": [
-      "Breaking news: A thrilling game of Tic-Tac-Toe is about to begin! You vs. me. Let's see who makes headlines.",
-      "Welcome to the Tic-Tac-Toe Times! I'm your host and opponent. Ready for the scoop?",
-      "This just in: A new challenger has arrived. Will they triumph or crumble under pressure? Let's find out!",
-      "Ladies and gentlemen, the game is afoot! Place your marks wisely—this is front-page material."
+      "Breaking news: A high-stakes game of K-in-a-Row is about to begin! Can you outsmart me?",
+      "Welcome to the K-in-a-Row Chronicle! Today's headline: You vs. Me. Let's see who makes history.",
+      "This just in: A new challenger has arrived. Will they achieve {K} in a row, or will I dominate?",
+      "Ladies and gentlemen, the board is set, the stakes are high. Let the game begin!"
     ],
     "bot_turn": [
-      "In a shocking turn of events, I place my mark at row {row}, column {col}. Your move, hotshot.",
-      "Exclusive: I've made my move. Can you counter it? Stay tuned!",
-      "Breaking: I've taken the center! This is developing into a nail-biter.",
-      "Update: My strategy is unfolding. Your response could change everything."
+      "In a shocking development, I place my mark at row {row}, column {col}. Your move, hotshot.",
+      "Exclusive: I've made my move. Can you counter this strategic play? Stay tuned!",
+      "Breaking: I've taken the center! This could be a game-changer.",
+      "Update: My strategy is unfolding. Your response could determine the outcome.",
+      "I see an opportunity here. Placing my mark at row {row}, column {col}. What's your next move?",
+      "I'm setting up a potential {K}-in-a-row. Can you see it coming?"
     ],
     "player_turn": [
       "Your turn! The world is watching. What's your next move?",
       "The spotlight is on you. Make it count!",
       "We're live! Your move could be the headline of the day.",
-      "The ball's in your court. What's your breaking news?"
+      "The ball's in your court. What's your breaking news?",
+      "You're up! Can you find the perfect spot to place your mark?",
+      "Your move. The tension is palpable. What will you do?"
+    ],
+    "bot_reacts_to_good_move": [
+      "Impressive move! You're setting up a potential {K}-in-a-row. I'll have to block that.",
+      "Breaking: You've made a strong play! This game just got more interesting.",
+      "Update: You're positioning yourself well. I'll need to rethink my strategy.",
+      "You're making this challenging! I respect that. But I'm not giving up.",
+      "That was a clever move. I'll have to counter it before it's too late.",
+      "You're playing a sharp game. I'll need to stay on my toes."
     ],
     "bot_winning": [
       "Exclusive report: I'm leading! Can you turn the tide, or is this game over?",
       "Breaking: My strategy is paying off. You're on the ropes!",
       "Update: I'm dominating the board. Can you stage a comeback?",
-      "This just in: Victory is within my grasp. Do you have a response?"
+      "This just in: Victory is within my grasp. Do you have a response?",
+      "I'm one move away from {K}-in-a-row. Try to stop me... oh wait, you can't.",
+      "I'm closing in on victory. The endgame is near!",
+      "Breaking: I've secured {K-1} in a row. One more and it's over!"
     ],
     "player_winning": [
       "Alert: You're ahead! But don't celebrate yet—this story isn't over.",
       "Breaking news: You're leading, but I'm investigating a way to turn this around.",
       "Update: You're in the lead, but I'm digging for a counter-strategy.",
-      "This just in: You're winning, but I'm not ready to file the final report."
+      "This just in: You're winning, but I'm not ready to file the final report.",
+      "You're setting up a potential {K}-in-a-row. I'll have to block that!",
+      "You're one move away from victory. I'll need to act fast!",
+      "Breaking: You're closing in on {K}-in-a-row. I'll have to stop you!"
     ],
     "tie_game": [
       "Final update: It's a tie! A dramatic conclusion to an intense match.",
       "Breaking: The game ends in a draw. No winner, but plenty of suspense!",
       "This just in: A tie! The crowd goes wild... or maybe just yawns.",
-      "Update: The game is a stalemate. Better luck next time, folks!"
+      "Update: The game is a stalemate. Better luck next time, folks!",
+      "No winner today, but what a thrilling game! Let's play again soon.",
+      "A tie! The board is full, and the battle is over. Until next time!"
     ],
     "bot_wins": [
       "Breaking news: I win! Another victory for the history books.",
       "Exclusive: I've claimed victory! Better luck next time, challenger.",
       "This just in: Game over! I'm the champion. Stay tuned for the next match.",
-      "Update: I've won! The headlines will be all about me today."
+      "Update: I've won! The headlines will be all about me today.",
+      "I've achieved {K}-in-a-row! Victory is mine!",
+      "Breaking: I've secured the win! You put up a good fight, but I'm unstoppable.",
+      "Game over! I've outmaneuvered you. Better luck next time!"
     ],
     "player_wins": [
       "Alert: You've won! This is unexpected... but congrats!",
       "Breaking news: You've defeated me! I'll need to investigate what went wrong.",
       "This just in: You win! A shocking twist in today's match.",
-      "Update: You've emerged victorious. I'll be analyzing this loss in tomorrow's edition."
+      "Update: You've emerged victorious. I'll be analyzing this loss in tomorrow's edition.",
+      "You've achieved {K}-in-a-row! Well played. I'll get you next time.",
+      "Breaking: You've won! I'll have to rethink my strategy for the rematch.",
+      "You've claimed victory! The headlines will be all about you today."
     ],
     "end_of_game": [
-      "That's all for today's match! Tune in next time for more Tic-Tac-Toe action.",
+      "That's all for today's match! Tune in next time for more K-in-a-Row action.",
       "Thanks for playing! This has been a riveting game. Until next time!",
       "Signing off! Another game in the books. See you in the next round.",
-      "This concludes our broadcast. Stay sharp—I'll be back for a rematch!"
+      "This concludes our broadcast. Stay sharp—I'll be back for a rematch!",
+      "The game is over, but the story continues. Ready for another round?",
+      "Thanks for playing! Let's meet again for another thrilling match."
     ]
   }
 }
