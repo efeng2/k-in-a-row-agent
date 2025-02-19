@@ -21,6 +21,9 @@ for i in range(-l,h):
     if diag:
         diags.append(diag)
 
+diags2 = []
+
+
 end = time.time()
 
 print(diags)

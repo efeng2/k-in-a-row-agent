@@ -1,7 +1,7 @@
 '''
 <yourUWNetID>_KInARow.py
 Authors: <your name(s) here, lastname first and partners separated by ";">
-  Example:  
+  Example:
     Authors: Smith, Jane; Lee, Laura
 
 An agent for playing "K-in-a-Row with Forbidden Squares" and related games.
@@ -16,10 +16,12 @@ TO PROVIDE A GOOD STRUCTURE FOR YOUR IMPLEMENTATION.
 from agent_base import KAgent
 from game_types import State, Game_Type
 
-AUTHORS = 'Jane Smith and Laura Lee' 
+AUTHORS = 'Jane Smith and Laura Lee'
 
-import time # You'll probably need this to avoid losing a
- # game due to exceeding a time limit.
+import time  # You'll probably need this to avoid losing a
+
+
+# game due to exceeding a time limit.
 
 # Create your own type of agent by subclassing KAgent:
 
@@ -27,57 +29,66 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
     # knows how to instantiate your agent class.
 
     def __init__(self, twin=False):
-        self.twin=twin
+        self.twin = twin
         self.nickname = 'Nic'
         if twin: self.nickname += '2'
         self.long_name = 'Templatus Skeletus'
         if twin: self.long_name += ' II'
         self.persona = 'bland'
         self.voice_info = {'Chrome': 10, 'Firefox': 2, 'other': 0}
-        self.playing = "don't know yet" # e.g., "X" or "O".
+        self.playing = "don't know yet"  # e.g., "X" or "O".
         self.alpha_beta_cutoffs_this_turn = -1
         self.num_static_evals_this_turn = -1
         self.zobrist_table_num_entries_this_turn = -1
         self.zobrist_table_num_hits_this_turn = -1
         self.current_game_type = None
-
-        self.initial_turn = True
-        self.kInARowSet = {}
-        self.coodinateDict = {}
+        self.KInARows = []
+        self.spaces = {}
 
     def introduce(self):
-        intro = '\nMy name is Templatus Skeletus.\n'+\
-            '"An instructor" made me.\n'+\
-            'Somebody please turn me into a real game-playing agent!\n'
+        intro = '\nMy name is Templatus Skeletus.\n' + \
+                '"An instructor" made me.\n' + \
+                'Somebody please turn me into a real game-playing agent!\n'
         if self.twin: intro += "By the way, I'm the TWIN.\n"
         return intro
 
     # Receive and acknowledge information about the game from
     # the game master:
     def prepare(
-        self,
-        game_type,
-        what_side_to_play,
-        opponent_nickname,
-        expected_time_per_move = 0.1, # Time limits can be
-                                      # changed mid-game by the game master.
+            self,
+            game_type,
+            what_side_to_play,
+            opponent_nickname,
+            expected_time_per_move=0.1,  # Time limits can be
+            # changed mid-game by the game master.
 
-        utterances_matter=True):      # If False, just return 'OK' for each utterance,
-                                      # or something simple and quick to compute
-                                      # and do not import any LLM or special APIs.
-                                      # During the tournament, this will be False..
-       if utterances_matter:
-           pass
-           # Optionally, import your LLM API here.
-           # Then you can use it to help create utterances.
-           
-       # Write code to save the relevant information in variables
-       # local to this instance of the agent.
-       # Game-type info can be in global variables.
-       print("Change this to return 'OK' when ready to test the method.")
-       return "Not-OK"
-   
-    # The core of your agent's ability should be implemented here:             
+            utterances_matter=True):  # If False, just return 'OK' for each utterance,
+        # or something simple and quick to compute
+        # and do not import any LLM or special APIs.
+        # During the tournament, this will be False..
+        if utterances_matter:
+            pass
+            # Optionally, import your LLM API here.
+            # Then you can use it to help create utterances.
+
+        # Write code to save the relevant information in variables
+        # local to this instance of the agent.
+        # Game-type info can be in global variables.
+        self.who_i_play = what_side_to_play
+        self.opponent_nickname = opponent_nickname
+        self.time_limit = expected_time_per_move
+        global GAME_TYPE
+        GAME_TYPE = game_type
+        print("Oh, I love playing randomly at ", game_type.long_name)
+        self.my_past_utterances = []
+        self.opponent_past_utterances = []
+        self.repeat_count = 0
+        self.utt_count = 0
+        if self.twin: self.utt_count = 5  # Offset the twin's utterances.
+
+        return "OK"
+
+    # The core of your agent's ability should be implemented here:
     def make_move(self, current_state, current_remark, time_limit=1000,
                   autograding=False, use_alpha_beta=True,
                   use_zobrist_hashing=False, max_ply=3,
@@ -86,152 +97,165 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
         print("code to compute a good move should go here.")
         # Here's a placeholder:
-        a_default_move = (0, 0) # This might be legal ONCE in a game,
+        a_default_move = (0, 0)  # This might be legal ONCE in a game,
         # if the square is not forbidden or already occupied.
-    
-        new_state = current_state # This is not allowed, and even if
+
+        new_state = current_state  # This is not allowed, and even if
         # it were allowed, the newState should be a deep COPY of the old.
-    
-        new_remark = "I need to think of something appropriate.\n" +\
-        "Well, I guess I can say that this move is probably illegal."
+
+        new_remark = "I need to think of something appropriate.\n" + \
+                     "Well, I guess I can say that this move is probably illegal."
 
         print("Returning from make_move")
         return [[a_default_move, new_state], new_remark]
 
     # The main adversarial search function:
     def minimax(self,
-            state,
-            depth_remaining,
-            pruning=False,
-            alpha=None,
-            beta=None):
+                state,
+                depth_remaining,
+                pruning=False,
+                alpha=None,
+                beta=None):
         print("Calling minimax. We need to implement its body.")
+        if not pruning:
+            if depth_remaining == 0:
+                return self.static_eval(state,GAME_TYPE)
+            if state.whose_move == 'X':
+                prov = -100000
+            else:
+                prov = 100000
+           # for s in successors()
 
-        default_score = 0 # Value of the passed-in state. Needs to be computed.
-        if depth_remaining != 0:
-            minimax()
+        default_score = 0  # Value of the passed-in state. Needs to be computed.
 
-    
         return [default_score, "my own optional stuff", "more of my stuff"]
-
         # Only the score is required here but other stuff can be returned
         # in the list, after the score, in case you want to pass info
         # back from recursive calls that might be used in your utterances,
-        # etc. 
+        # etc.
 
-    def straightLoop(self, sideA, sideB, game_type, state):
-        k = game_type.k
-
-        total_score = 0
-        blank_count = 0
-
-        for m in range(sideA):
-            for n in range(sideB):
-                
-                # coordinate (m, n), increase blank count
-                blank_count += 1
-
-                # if run into "-"
-                if state.board[m][n] == "-":
-                    blank_count = 0
-
-                if ((m, n) not in self.coodinateDict):
-                    self.coodinateDict[(m, n)] = [] 
-
-                # if possible k in a row, create new kInARow and add all previous coordinates to set
-                if blank_count == k:
-                    newKInARow = []
-                    coordSet = set()
-                    newKInARow.append(coordSet)
-
-                    # append num X/O
-                    newKInARow.append(0)
-
-                    for blank in range(blank_count):
-                        newKInARow[0].add((m, n - blank))
-
-                        self.coodinateDict[(m, n - blank)].append(newKInARow)
-                        
-                        # add set as value to every coordinate in coodinateDict
-                    blank_count += -1
-
-                # # If X
-                # if state.board[m][n] == 'X':
-                #     # Every kInARow with this coordinate, increase numX count
-                #     for kInaRow in self.coodinateDict[(m, n)]:
-                #         # delete if kInaRow contains numO
-                #         if kInaRow['numO'] > 0:
-                #             del kInaRow
-                #         else:
-                #             kInaRow['numX'] += 1
-                #             total_score += 10 ** kInaRow['numX']
-                    
-                # # If O
-                # if state.board[m][n] == 'O':
-                #     # Every kInARow with this coordinate, increase numO count
-                #     for kInaRow in self.coodinateDict[(m, n)]:
-                #         # delete if kInaRow contains numO
-                #         if kInaRow['numX'] > 0:
-                #             del kInaRow
-                #         else:
-                #             kInaRow['numO'] += 1
-                #             total_score += -10 ** kInaRow['numO']
-
-                # # reset blank count when moving to the next row
-            blank_count = 0
-        print(self.coodinateDict)
-        return total_score
-    
-    def makeUserMove(self, state):
-        return 0
-    
-    def static_eval(self, state, game_type=None, kinarows=None):
+    def static_eval(self, state, game_type=None, use_existing_KInARows=False, move=None):
         print('calling static_eval. Its value needs to be computed!')
         # Values should be higher when the states are better for X,
         # lower when better for O.
-        if kinarows == None:
 
-
-
-        # If initial state:
-            # 1. Generate all possible k-in-a-rows as Objs/sets for m * n
-            # 2. Map each coordinate to their possible k-in-a-rows, where coordinates are keys and k-in-a-rows are values
-            # Run through state board, call userMakeNewMove() for each X and O encounter
-
-        # If not initial run: helper function userMakeNewMove()
-            # 3. User put X on coordinate, look up coordinate, numX+=1 for reach k-in-a-rows
-            # 4. User put O on coordinate, look up coordinate, numO+=1 for each k-in-a-rows
-            # 5. if look up coordinate numX > 0 and == numO, delete possibility
-            # 6. Calculate score, 10^numX * numk-in-a-rows - 10^numO * numk-in-a-rows
-            # 8. If numX = k Win
-            # Win check
-            #   Filter k-2 in a rows
-            #     If intersection >=4, guarenteed win
-            #   Filter k-1 in a rows
-            #     If intersection >=2, guarenteed win
-        
-        total_score = 0
-
-        if (self.initial_turn == True):
-
-            # loop through horizontal
-            total_score += self.straightLoop(game_type.m, game_type.n, game_type, state)
-            # loop through vertical
-            total_score += self.straightLoop(game_type.n, game_type.m, game_type, state)
-
-            # loop through diag left
-
-            # loop through diag right
-
-            self.initial_turn = True
-
+        # Assumes K value of 3 if no game type specified
+        if game_type is None:
+            k = 3
         else:
-            self.makeUserMove(state)
+            k = game_type.k
 
-        return total_score
+        if not use_existing_KInARows:
+            self.KInARows = []
+            self.spaces = {}
+        if not self.KInARows and not self.spaces:
+            self.find_possible_KInARows(state, k)
 
-    
- 
+
+
+
+        return 0
+
+    def find_possible_KInARows(self, state, k):
+        board = state.board
+
+        # Transposed board
+        board_t = [list(row) for row in zip(*board)]
+
+        # Diagonals 1
+        board_d = get_diagonals(board)
+
+        # Diagonals 2
+        board_td = get_diagonals(board_t)
+
+        board_configs = [board, board_t, board_d, board_td]
+
+        for board_config in board_configs:
+            k_in_a_rows,spaces = search_rows(board_config,k)
+            self.KInARows.append(k_in_a_rows)
+            self.spaces.update(spaces)
+
+        return
+
+    # def associate_coordinates(self, state):
+    #     board = state.board
+    #     coordinates = {}
+    #     for i,row in enumerate(board):
+    #         for j,space in enumerate(row):
+    #             for n,k_in_a_row in enumerate(self.KInARows):
+    #                 if (i,j) in k_in_a_row[0]:
+    #                     if coordinates[(i,j)]
+    #                     coordinates[(i,j)] = []
+
+
+
+
+
+def search_rows(board,k):
+    k_in_a_rows = []
+    spaces = {}
+    for i, row in enumerate(board):
+        count = 0
+        x_count = 0
+        o_count = 0
+        for j, space in enumerate(row):
+            if space == ' ':
+                count += 1
+            elif space == 'X':
+                if o_count:
+                    count =  0
+                    x_count = 0
+                    o_count = 0
+                else:
+                    count += 1
+                    x_count += 1
+            elif space == 'O':
+                if x_count:
+                    count =  0
+                    x_count = 0
+                    o_count = 0
+                else:
+                    count += 1
+                    o_count += 1
+            elif space == '-':
+                count = 0
+                x_count = 0
+                o_count = 0
+
+            if count >= k:
+                indices = {(i,x+1) for x in range(j-k,j)}
+                if x_count and o_count:
+                    raise Exception("x_count or o_count should be 0")
+                score = x_count**10 - o_count**10
+                k_in_a_rows.append([indices,score])
+
+                for index in indices:
+                    if index in spaces:
+                        spaces[index].append(len(k_in_a_rows))
+                    else:
+                        spaces[index] = [len(k_in_a_rows)]
+    return k_in_a_rows,spaces
+
+def get_diagonals(board):
+    diags = []
+    h = len(board)
+    l = len(board[0])
+
+    for i in range(-l, h):
+        diag = []
+
+        for j in range(l):
+
+            if h > i + j >= 0:
+                index = (i + j, j)
+            else:
+                continue
+            diag.append(board[index[0]][index[1]])
+        if diag:
+            diags.append(diag)
+
+    return diags
+
 # OPTIONAL THINGS TO KEEP TRACK OF:
 
 #  WHO_MY_OPPONENT_PLAYS = other(WHO_I_PLAY)
@@ -240,3 +264,8 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 #  UTTERANCE_COUNT = 0
 #  REPEAT_COUNT = 0 or a table of these if you are reusing different utterances
 
+list1 = [[0, 1], [2, 3]]
+
+diag = get_diagonals(list1)
+
+print(diag)
