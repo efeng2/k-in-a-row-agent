@@ -167,7 +167,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                 elif cscore < 0 and state.whose_move == "O":
                     self.KInARows[i][1] = cscore*10
 
-
+        # Find the total score from KInARows
         score = 0
         for k_in_a_row in self.KInARows:
             score += k_in_a_row[1]
@@ -205,7 +205,10 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
     #                     if coordinates[(i,j)]
     #                     coordinates[(i,j)] = []
 
-
+class StateEval(State):
+    def __init__(self, evaluation):
+        super().__init__()
+        self.eval = evaluation
 
 
 
@@ -245,13 +248,15 @@ def search_rows(board,k):
                 if x_count and o_count:
                     raise Exception("x_count or o_count should be 0")
                 score = x_count**10 - o_count**10
-                k_in_a_rows.append([indices,score])
+                new_k_in_a_row = [indices,score]
+                k_in_a_rows.append(new_k_in_a_row)
+
 
                 for index in indices:
                     if index in spaces:
-                        spaces[index].append(len(k_in_a_rows))
+                        spaces[index].append(new_k_in_a_row)
                     else:
-                        spaces[index] = [len(k_in_a_rows)]
+                        spaces[index] = [new_k_in_a_row]
     return k_in_a_rows,spaces
 
 def get_diagonals(board):
