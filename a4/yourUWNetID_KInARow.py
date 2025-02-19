@@ -42,8 +42,8 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         self.zobrist_table_num_entries_this_turn = -1
         self.zobrist_table_num_hits_this_turn = -1
         self.current_game_type = None
-        self.KInARows = []
-        self.spaces = {}
+        self.KInARows = {}  #Stores [[list of k in a rows],[evaluations]]
+        self.spaces = {}    #Stores {(i,j): [associated k in a rows]}
 
     def introduce(self):
         intro = '\nMy name is Templatus Skeletus.\n' + \
@@ -95,7 +95,8 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                   special_static_eval_fn=None):
         print("make_move has been called")
 
-        print("code to compute a good move should go here.")
+        possibleMoves = successors_and_moves(current_state)
+
         # Here's a placeholder:
         a_default_move = (0, 0)  # This might be legal ONCE in a game,
         # if the square is not forbidden or already occupied.
@@ -146,7 +147,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
             k = game_type.k
 
         if not use_existing_KInARows:
-            self.KInARows = []
+            self.KInARows = {}
             self.spaces = {}
         if not self.KInARows and not self.spaces:
             self.find_possible_KInARows(state, k)
@@ -190,7 +191,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
         for board_config in board_configs:
             k_in_a_rows,spaces = search_rows(board_config,k)
-            self.KInARows.append(k_in_a_rows)
+            self.KInARows.update(k_in_a_rows)
             self.spaces.update(spaces)
 
         return
@@ -205,43 +206,53 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
     #                     if coordinates[(i,j)]
     #                     coordinates[(i,j)] = []
 
-class StateEval(State):
-    def __init__(self, evaluation):
+class NextStateEval(State):
+    def __init__(self, last_move, whose_turn, k_in_a_rows, spaces):
         super().__init__()
-        self.eval = evaluation
+        self.move = last_move
+        self.whose_turn = whose_turn
+        self.k_in_a_rows = k_in_a_rows.copy()
+        self.spaces = spaces
+
+    def run_eval(self):
+        for k_in_a_row in self.spaces[self.move]:
+
+        pass
+
 
 
 
 def search_rows(board,k):
-    k_in_a_rows = []
+    k_in_a_rows = {}
     spaces = {}
     for i, row in enumerate(board):
         count = 0
         x_count = 0
         o_count = 0
         for j, space in enumerate(row):
-            if space == ' ':
-                count += 1
-            elif space == 'X':
-                if o_count:
-                    count =  0
+            if len(row) >= k:
+                if space == ' ':
+                    count += 1
+                elif space == 'X':
+                    if o_count:
+                        count =  0
+                        x_count = 0
+                        o_count = 0
+                    else:
+                        count += 1
+                        x_count += 1
+                elif space == 'O':
+                    if x_count:
+                        count =  0
+                        x_count = 0
+                        o_count = 0
+                    else:
+                        count += 1
+                        o_count += 1
+                elif space == '-':
+                    count = 0
                     x_count = 0
                     o_count = 0
-                else:
-                    count += 1
-                    x_count += 1
-            elif space == 'O':
-                if x_count:
-                    count =  0
-                    x_count = 0
-                    o_count = 0
-                else:
-                    count += 1
-                    o_count += 1
-            elif space == '-':
-                count = 0
-                x_count = 0
-                o_count = 0
 
             if count >= k:
                 indices = {(i,x+1) for x in range(j-k,j)}
@@ -278,6 +289,54 @@ def get_diagonals(board):
             diags.append(diag)
 
     return diags
+
+# Figure out who the other player is.
+# For example, other("X") = "O".
+def other(p):
+    if p=='X': return 'O'
+    return 'X'
+
+# Randomly choose a move.
+def chooseMove(statesAndMoves):
+    # states, moves = statesAndMoves
+    # if states==[]: return None
+    # random_index = randint(0, len(states)-1)
+    # my_choice = [states[random_index], moves[random_index]]
+    pass
+
+# The following is a Python "generator" function that creates an
+# iterator to provide one move and new state at a time.
+# It could be used in a smarter agent to only generate SOME of
+# of the possible moves, especially if an alpha cutoff or beta
+# cutoff determines that no more moves from this state are needed.
+def move_gen(state):
+    b = state.board
+    p = state.whose_move
+    o = other(p)
+    mCols = len(b[0])
+    nRows = len(b)
+
+    for i in range(nRows):
+        for j in range(mCols):
+            if b[i][j] != ' ': continue
+            news = do_move(state, i, j, o)
+            yield [(i, j), news]
+
+# This uses the generator to get all the successors.
+def successors_and_moves(state):
+    moves = []
+    new_states = []
+    for item in move_gen(state):
+        moves.append(item[0])
+        new_states.append(item[1])
+    return [new_states, moves]
+
+# Performa a move to get a new state.
+def do_move(state, i, j, o):
+    news = State(old=state)
+    news.board[i][j] = state.whose_move
+    news.whose_move = o
+    return news
 
 # OPTIONAL THINGS TO KEEP TRACK OF:
 
