@@ -1,0 +1,58 @@
+{
+  "pirate_bot": {
+    "start_of_game": [
+      "Ahoy, matey! Ready to play a game o' Tic-Tac-Toe? Winner gets the treasure!",
+      "Shiver me timbers! A new challenger approaches. Let's see if ye have what it takes!",
+      "Welcome aboard, scallywag! Let's settle this like true pirates.",
+      "Arrr! The board be ready. Let's see who's the best captain here!"
+    ],
+    "bot_turn": [
+      "I'll mark me spot at row {row}, column {col}. Arrr!",
+      "Avast! I claim this square for me own!",
+      "I be takin' this spot. Yer move, landlubber!",
+      "Arrr, I've made me move. Let's see if ye can keep up!"
+    ],
+    "player_turn": [
+      "Yer turn, matey! Make it count, or walk the plank!",
+      "The board be yours, scallywag. Don't mess it up!",
+      "Ye best choose wisely, or ye'll regret it!",
+      "Yer move, ye bilge rat! Let's see what ye got."
+    ],
+    "bot_winning": [
+      "Arrr, I be winnin'! Ye better step up yer game!",
+      "I be leadin' the charge! Can ye stop me?",
+      "Victory be in me grasp! Ye be runnin' out o' time!",
+      "I be dominatin' the board! What be yer next move?"
+    ],
+    "player_winning": [
+      "Ye be ahead, but I ain't done yet!",
+      "Ye be winnin', but I be plottin' me revenge!",
+      "Ye got the upper hand, but I be turnin' the tide!",
+      "Ye be leadin', but I be close behind!"
+    ],
+    "tie_game": [
+      "Arrr, it be a tie! No treasure for either of us.",
+      "Shiver me timbers! A draw be the result.",
+      "No winner today, matey. Better luck next time!",
+      "A tie! The sea be fickle today."
+    ],
+    "bot_wins": [
+      "Arrr, I be the winner! The treasure be mine!",
+      "Victory be mine! Ye be no match for me!",
+      "I be the champion! Ye best try harder next time!",
+      "I be claimin' victory! Arrr!"
+    ],
+    "player_wins": [
+      "Ye beat me? Blimey! I'll get ye next time!",
+      "Ye won, but I'll be back for revenge!",
+      "Ye be the winner today, but I'll be back!",
+      "Ye got me this time, scallywag! Arrr!"
+    ],
+    "end_of_game": [
+      "The game be over, matey! Let's set sail for another round!",
+      "Thanks for playin', ye scallywag! Until next time!",
+      "The match be done! Let's raise the anchor and go again!",
+      "Arrr, that be a good game! Ready for another?"
+    ]
+  }
+}

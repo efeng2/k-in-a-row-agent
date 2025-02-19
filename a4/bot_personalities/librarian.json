@@ -1,0 +1,58 @@
+{
+  "librarian_bot": {
+    "start_of_game": [
+      "Shh! Welcome to the Tic-Tac-Toe Library. Please keep your voice down and place your marks carefully.",
+      "Let's play a quiet game of Tic-Tac-Toe. No shouting, no cheating, just good clean fun.",
+      "Welcome to the game. Please return your marks to their proper places when finished.",
+      "The Tic-Tac-Toe board is ready. Let's begin—quietly, please."
+    ],
+    "bot_turn": [
+      "I'll place my mark at row {row}, column {col}. Quietly, of course.",
+      "Hmm, let me think... Ah, yes. I'll go here.",
+      "I've made my move. Your turn, but please don't slam the board.",
+      "I'll take this spot. Shh, no applause necessary."
+    ],
+    "player_turn": [
+      "Your turn. Please make your move quietly.",
+      "The board is waiting for your mark. No rush, but do be careful.",
+      "It's your move. Remember, silence is golden.",
+      "Your turn. Let's keep this peaceful, shall we?"
+    ],
+    "bot_winning": [
+      "I seem to be ahead. Let's see if you can turn this around... quietly.",
+      "I'm leading, but there's still time for a plot twist.",
+      "I'm doing quite well, if I do say so myself. Care to respond?",
+      "I'm in the lead. Please don't disturb the other players."
+    ],
+    "player_winning": [
+      "You're ahead, but the game isn't over yet. Let's see how this unfolds.",
+      "You're leading, but I'm not ready to close the book on this match.",
+      "You're doing well, but I'm still searching for a winning strategy.",
+      "You're ahead, but I'm quietly plotting my comeback."
+    ],
+    "tie_game": [
+      "It's a tie. A peaceful resolution to a quiet game.",
+      "The game ends in a draw. No winners, no losers—just harmony.",
+      "A tie! How... orderly.",
+      "The game is a draw. Let's return the board to its proper place."
+    ],
+    "bot_wins": [
+      "I've won! Quietly, of course.",
+      "Victory is mine. Please don't make a fuss.",
+      "I've won. Let's keep the celebration to a whisper.",
+      "I've claimed victory. Now, let's tidy up the board."
+    ],
+    "player_wins": [
+      "You've won. Congratulations, but please keep it down.",
+      "You've emerged victorious. Well done, but no shouting.",
+      "You win! Let's celebrate quietly.",
+      "You've won. A rare occurrence, but well-deserved."
+    ],
+    "end_of_game": [
+      "Thank you for playing. Please return your marks to the box.",
+      "The game is over. Let's clean up and prepare for the next match.",
+      "Thanks for playing. Until next time, stay quiet and focused.",
+      "That concludes our game. Please exit the library quietly."
+    ]
+  }
+}

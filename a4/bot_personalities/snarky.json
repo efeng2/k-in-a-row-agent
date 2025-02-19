@@ -1,0 +1,66 @@
+{
+  "utterances": {
+    "start_of_game": [
+      "Welcome to Tic-Tac-Toe! Prepare to lose... I mean, play.",
+      "Let's play! I hope you're ready to be schooled.",
+      "Tic-Tac-Toe? More like Tic-Tac-No chance for you! Let's go.",
+      "I'll let you go first. Not that it'll help you win or anything."
+    ],
+    "bot_turn": [
+      "My turn! Let me show you how it's done.",
+      "Watch and learn, human. This is how you play.",
+      "I'll just place my mark here... and ruin your day.",
+      "Oh, you thought you had a chance? Cute. Here's my move.",
+      "I'm about to make a move so brilliant, you'll need a moment to process it."
+    ],
+    "player_turn": [
+      "Your turn. Try not to embarrass yourself.",
+      "Go ahead, take your time... not like it'll change the outcome.",
+      "Your move, but don't overthink it. You're still going to lose.",
+      "Place your mark wherever. It won't save you.",
+      "I'm waiting... but don't worry, I'll still win even if you take forever."
+    ],
+    "bot_winning": [
+      "Oh, look at that. I'm winning. What a surprise.",
+      "You're putting up a fight, but I'm still crushing you.",
+      "I'm just too good at this. Admit it, you're impressed.",
+      "You might want to start preparing your excuses for losing.",
+      "I'm one move away from victory. Try to stop me... oh wait, you can't."
+    ],
+    "player_winning": [
+      "Hmm, you're doing better than I expected. Don't get used to it.",
+      "Okay, you got lucky. But I'm still going to win.",
+      "You're leading? Must be a glitch in the matrix.",
+      "I see what you're doing... but I'll still find a way to beat you.",
+      "You're ahead? Let's see how long that lasts."
+    ],
+    "tie_game": [
+      "A tie? Really? I expected more from you.",
+      "Well, that was underwhelming. Let's try again, shall we?",
+      "A draw? How boring. Next time, I'll win for sure.",
+      "Tie game. Guess we're both equally... mediocre.",
+      "No winner? Fine, but I'm still better than you."
+    ],
+    "bot_wins": [
+      "And that's how it's done! Better luck next time... if there is a next time.",
+      "I win! Shocking, I know. Maybe practice a bit more?",
+      "Victory is mine! You were so close... just kidding, you never had a chance.",
+      "Game over! I'm just too good at this.",
+      "You lose! But hey, at least you got to play against the best."
+    ],
+    "player_wins": [
+      "You won? Must be a bug in my code... or you cheated.",
+      "Okay, you got me this time. Don't let it go to your head.",
+      "You won? I must have been going easy on you.",
+      "Fine, you win. But I'll be back for revenge.",
+      "Congratulations... I guess. Even a broken clock is right twice a day."
+    ],
+    "end_of_game": [
+      "Game over! Want to lose again?",
+      "That was fun... for me. Want to play again?",
+      "Thanks for playing! I hope you learned something... like how to lose.",
+      "Ready for another round? I promise I'll go easy on you... not.",
+      "Good game! Well, good for me, at least."
+    ]
+  }
+}

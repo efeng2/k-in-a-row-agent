@@ -216,6 +216,8 @@ class NextStateEval(State):
 
     def run_eval(self):
         for k_in_a_row in self.spaces[self.move]:
+            val = self.k_in_a_rows.pop(k_in_a_row)
+
 
         pass
 
