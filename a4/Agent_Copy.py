@@ -25,9 +25,9 @@ import time # You'll probably need this to avoid losing a
 
 # Create your own type of agent by subclassing KAgent:
 # Constants
-BETA_DEFAULT = -10000000
-ALPHA_DEFAULT = 10000000
-MINIMAX_DEPTH = 2
+ALPHA_DEFAULT = -10000000
+BETA_DEFAULT = 10000000
+# MINIMAX_DEPTH = 2
 
 # For utterances to change according to game state
 WIN_THRESHOLD = 100000
@@ -54,10 +54,8 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         self.zobrist_table_num_entries_this_turn = -1
         self.zobrist_table_num_hits_this_turn = -1
         self.current_game_type = None
-
-        self.initial_turn = True
-        self.kInARowSet = {}
-        self.coodinateDict = {}
+        self.XKInARows = []
+        self.OKInARows = []
 
     def introduce(self):
         intro = 'HELLO I AM TEST BOT'
@@ -106,7 +104,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                   special_static_eval_fn=None):
         print("make_move has been called")
 
-        myMove = self.chooseMove(current_state)
+        myMove = self.chooseMove(current_state, use_alpha_beta, special_static_eval_fn, max_ply)
         minimax_value, newState, newMove = myMove
 
         myUtterance = self.nextUtterance(minimax_value)
@@ -141,110 +139,131 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
             state,
             move,
             depth_remaining,
+            static_eval_fn,
+            isRoot,
+            isMaxNode,
             pruning=False,
             alpha=None,
             beta=None):
-        # print("Calling minimax with " + str(state.whose_move) + str(state) + str(move))
 
         # generate sucessors
         child_nodes, moves = successors_and_moves(state)
         
         if (depth_remaining == 0 or child_nodes==[]):
-            node_value = self.static_eval(state)
+            node_value = static_eval_fn(state)
+            # print(str(node_value) + ' ' + str(move))
 
-            # return node's value and which move node it came from
             return [node_value, state, move]
 
         # If Maximizing Node
-        if state.whose_move == 'X':
-            max_value = BETA_DEFAULT
+        if isMaxNode:
+            max_value = ALPHA_DEFAULT
+            bestNodeState = None
+            bestNodeMove = None
 
             # traverse all possible options
             for index in range(len(child_nodes)):
-                node_value, node_state, node_move = self.minimax(child_nodes[index], moves[index], depth_remaining - 1, pruning, alpha, beta)
+                node_value, node_state, node_move = self.minimax(child_nodes[index], moves[index], depth_remaining - 1, static_eval_fn, False, False, pruning, alpha, beta)
 
-                max_value = max(node_value, max_value)
+                if node_value > max_value:
+                    bestNodeState = node_state
+                    bestNodeMove = node_move
+                    max_value = node_value
+
+                # max_value = max(node_value, max_value)
                 alpha = max(alpha, max_value)
 
-                # if pruning is true and beta pass alpha, prune node
+                # if pruning is true and beta pass alpha, prune node     
                 if pruning == True and beta <= alpha:
                     break
-            return [max_value, node_state, node_move]
+            if isRoot:
+                return [max_value, bestNodeState, bestNodeMove]
+            else:
+                return [max_value, state, move]
         
         # If Minimizing Node
         else:
-            max_value = ALPHA_DEFAULT
+            min_value = BETA_DEFAULT
+            bestNodeState = None
+            bestNodeMove = None
 
             # traverse all possible options
             for index in range(len(child_nodes)):
-                node_value, node_state, node_move = self.minimax(child_nodes[index], moves[index], depth_remaining - 1, pruning, alpha, beta)
+                node_value, node_state, node_move = self.minimax(child_nodes[index], moves[index], depth_remaining - 1, static_eval_fn, False, True, pruning, alpha, beta)
 
-                max_value = min(node_value, max_value)
-                beta = min(beta, max_value)
+                if node_value < min_value:
+                    bestNodeState = node_state
+                    bestNodeMove = node_move
+                    min_value = node_value
+
+                # max_value = min(node_value, max_value)
+                beta = min(beta, min_value)
 
                 # if pruning is true and beta pass alpha, prune node
                 if pruning == True and beta <= alpha:
                     break
-            return [max_value, node_state, node_move]
-
-        # Only the score is required here but other stuff can be returned
-        # in the list, after the score, in case you want to pass info
-        # back from recursive calls that might be used in your utterances,
-        # etc. 
+            if isRoot:
+                return [min_value, bestNodeState, bestNodeMove]
+            else:
+                return [min_value, state, move]
 
     # Choose Move based on minimax
-    def chooseMove(self, root_state):
+    def chooseMove(self, root_state, use_alpha_beta, special_static_eval_fn, max_ply):
+        static_eval_fn = self.static_eval
+        isMaxNode = True
+
+        if special_static_eval_fn != None:
+            static_eval_fn = special_static_eval_fn
+        if self.who_i_play == 'O':
+            isMaxNode = False
 
         # run minimax
-        minimax_value, state, move = self.minimax(root_state, (0,0), MINIMAX_DEPTH, True, ALPHA_DEFAULT, BETA_DEFAULT)
+        minimax_value, state, move = self.minimax(root_state, (0,0), max_ply, static_eval_fn, True, isMaxNode, use_alpha_beta, ALPHA_DEFAULT, BETA_DEFAULT)
 
         my_choice = [minimax_value, state, move]
         return my_choice
-    
-    def static_eval(self, state, game_type=None):
+
+    def static_eval(self, state, game_type=None, use_existing_KInARows=False, move=None):
         print('calling static_eval.')
         # Values should be higher when the states are better for X,
         # lower when better for O.
 
-        # If initial state:
-            # 1. Generate all possible k-in-a-rows as Objs/sets for m * n
-            # 2. Map each coordinate to their possible k-in-a-rows, where coordinates are keys and k-in-a-rows are values
-            # Run through state board, call userMakeNewMove() for each X and O encounter
-
-        # If not initial run: helper function userMakeNewMove()
-            # 3. User put X on coordinate, look up coordinate, numX+=1 for reach k-in-a-rows
-            # 4. User put O on coordinate, look up coordinate, numO+=1 for each k-in-a-rows
-            # 5. if look up coordinate numX > 0 and == numO, delete possibility
-            # 6. Calculate score, 10^numX * numk-in-a-rows - 10^numO * numk-in-a-rows
-            # 8. If numX = k Win
-            # Win check
-            #   Filter k-2 in a rows
-            #     If intersection >=4, guarenteed win
-            #   Filter k-1 in a rows
-            #     If intersection >=2, guarenteed win
-        
+        # Assumes K value of 3 if no game type specified
         total_score = 0
-        m = 0
-        n = 0
-        
-        if game_type != None:
-            m = game_type.m
-            n = game_type.n
-        # else:
-        #     m = state.m
-        #     n = state.n
+        k = game_type.k
 
-        # simple static eval for now...
-        for i in range(m):
-            count = 0
-            for j in range(n):
-                if state[i][j] == 'X':
-                    count += 1
-                if state[i][j] == 'O':
-                    count -= 1
-            total_score += 10 ** count
+        if not use_existing_KInARows:
+            self.XKInARows = [] # horizontal, vertical, diagonalLeft, diagonalRight
+            self.OKInARows = [] # horizontal, vertical, diagonalLeft, diagonalRight
+
+        if not self.XKInARows and not self.OKInARows:
+            self.find_possible_KInARows(state, k)
+
+        for i in range(len(self.XKInARows)):
+            total_score += 2^self.XKInARows[i]
+            total_score += -2^self.OKInARows[i]
 
         return total_score
+
+    def find_possible_KInARows(self, state, k):
+        board = state.board
+
+        # Transposed board
+        board_t = [list(row) for row in zip(*board)]
+
+        # Diagonals 1
+        board_d = get_diagonals(board)
+
+        # Diagonals 2
+        board_td = get_diagonals(board_t)
+
+        board_configs = [board, board_t, board_d, board_td]
+
+        for board_config in board_configs:
+            numXKInARows, numOKInARows = search_rows(board_config,k)
+
+            self.XKInARows.append(numXKInARows)
+            self.OKInARows.append(numOKInARows)
     
 # Figure out who the other player is.
 # For example, other("X") = "O".
@@ -324,3 +343,94 @@ if __name__=="__main__":
 #  UTTERANCE_COUNT = 0
 #  REPEAT_COUNT = 0 or a table of these if you are reusing different utterances
 
+
+
+def search_rows(board, k):
+    numXKInARows = 0
+    numOKInARows = 0
+
+    for i, row in enumerate(board):
+
+        blank_count_x = 0
+        blank_count_o = 0
+
+        x_count = 0
+        o_count = 0
+
+        for j, space in enumerate(row):
+            
+            if space == ' ':
+                blank_count_x += 1
+
+            elif space == 'X':
+
+                # end o counter
+                if blank_count_o >= k:
+                    numOKInARows += blank_count_o - k + 1
+                blank_count_o = 0
+                o_count = 0
+
+                # start x counter
+                blank_count_x += 1
+                x_count += 1
+
+            elif space == 'O':
+
+                # end x counter
+                if blank_count_x >= k:
+                    numXKInARows += blank_count_x - k + 1
+                blank_count_x = 0
+                x_count = 0
+                
+                # start o counter
+                blank_count_o += 1
+                o_count += 1
+
+            elif space == '-':
+                
+                # end both counters
+                if blank_count_x >= k:
+                    numXKInARows += blank_count_o - k + 1
+                if blank_count_o >= k:
+                    numOKInARows += blank_count_o - k + 1
+                
+                # reset
+                blank_count_o = 0
+                blank_count_x = 0
+                x_count = 0
+                o_count = 0
+
+            # if count >= k:
+            #     indices = {(i,x+1) for x in range(j-k,j)}
+            #     if x_count and o_count:
+            #         raise Exception("x_count or o_count should be 0")
+            #     score = x_count**10 - o_count**10
+            #     k_in_a_rows.append([indices,score])
+
+            #     for index in indices:
+            #         if index in spaces:
+            #             spaces[index].append(len(k_in_a_rows))
+            #         else:
+            #             spaces[index] = [len(k_in_a_rows)]
+
+    return [numXKInARows, numOKInARows]
+
+def get_diagonals(board):
+    diags = []
+    h = len(board)
+    l = len(board[0])
+
+    for i in range(-l, h):
+        diag = []
+
+        for j in range(l):
+
+            if h > i + j >= 0:
+                index = (i + j, j)
+            else:
+                continue
+            diag.append(board[index[0]][index[1]])
+        if diag:
+            diags.append(diag)
+
+    return diags
