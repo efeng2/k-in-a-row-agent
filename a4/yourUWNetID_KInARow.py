@@ -151,10 +151,28 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         if not self.KInARows and not self.spaces:
             self.find_possible_KInARows(state, k)
 
+        if move is not None:
+            for i in self.spaces[move]:
+                cscore = self.KInARows[i][1]
+                if cscore == 0 and state.whose_move == "X":
+                    self.KInARows[i][1] = 10
+                elif cscore > 0 and state.whose_move == "X":
+                    self.KInARows[i][1] = cscore*10
+                elif cscore < 0 and state.whose_move == "X":
+                    self.KInARows[i][1] = None
+                elif cscore == 0 and state.whose_move == "O":
+                    self.KInARows[i][1] = -10
+                elif cscore > 0 and state.whose_move == "O":
+                    self.KInARows[i][1] = None
+                elif cscore < 0 and state.whose_move == "O":
+                    self.KInARows[i][1] = cscore*10
 
 
+        score = 0
+        for k_in_a_row in self.KInARows:
+            score += k_in_a_row[1]
 
-        return 0
+        return score
 
     def find_possible_KInARows(self, state, k):
         board = state.board
