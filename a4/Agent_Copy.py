@@ -42,9 +42,9 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
     def __init__(self, twin=False):
         self.twin=twin
-        self.nickname = 'Times'
+        self.nickname = 'TicTacTimes'
         if twin: self.nickname += ' II'
-        self.long_name = 'TicTacTimes'
+        self.long_name = 'Reporter TicTacTimes'
         if twin: self.long_name += ' the II'
         self.persona = 'snarky'
         self.voice_info = {'Chrome': 10, 'Firefox': 2, 'other': 0}
@@ -66,7 +66,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         self.OKInARows = []
 
     def introduce(self):
-        intro = '"Good evening, dear reader! I\'m TicTacTimes, the world\'s first AI journalist dedicated to hard-hitting Tic-Tac-Toe coverage. Reporting live from The Daily Grid!'
+        intro = '"Good evening, dear reader! I\'m TicTacTimes, the world\'s first journalist dedicated to hard-hitting Tic-Tac-Toe coverage. Reporting live from The Daily Grid!'
         if self.twin:
             intro = '"And I\'m TicTacTimes the II, I don\'t sugarcoat the truth. Together, we\'re the most unstoppable duo in Tic-Tac-Toe reporting history.'
         return intro
@@ -174,12 +174,18 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
         # generate sucessors
         child_nodes, moves = successors_and_moves(state)
+        # print('child_nodes: ' + str(child_nodes))
+        # print('moves: ' + str(moves))
         
         if (depth_remaining == 0 or child_nodes==[]):
             #print([alpha, beta])
             node_value = static_eval_fn(state)
+            # print('leaf_node_value: ' + str(node_value))
 
             return [node_value, state, move]
+        
+        # print('move: ' + str(move))
+        # print(isMaxNode)
 
         # If Maximizing Node
         if isMaxNode:
@@ -190,11 +196,17 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
             # traverse all possible options
             for index in range(len(child_nodes)):
                 node_value, node_state, node_move = self.minimax(child_nodes[index], moves[index], depth_remaining - 1, static_eval_fn, False, False, pruning, alpha, beta)
+                # print(str(node_move) + ' node_value: ' + str(node_value))
+                # print('max_value: ' + str(max_value))
+                # print('move: ' + str(move))
 
                 if node_value > max_value:
                     bestNodeState = node_state
                     bestNodeMove = node_move
                     max_value = node_value
+
+                # print('bestNodeMove: ' + str(bestNodeMove))
+                # print('max_value: ' + str(max_value))
 
                 # max_value = max(node_value, max_value)
                 alpha = max(alpha, max_value)
@@ -216,17 +228,22 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
             # traverse all possible options
             for index in range(len(child_nodes)):
                 node_value, node_state, node_move = self.minimax(child_nodes[index], moves[index], depth_remaining - 1, static_eval_fn, False, True, pruning, alpha, beta)
+                # print(str(node_move) + ' node_value: ' + str(node_value))
+                # print('min_value: ' + str(min_value))
 
                 if node_value < min_value:
                     bestNodeState = node_state
                     bestNodeMove = node_move
                     min_value = node_value
+                # print('bestNodeMove: ' + str(bestNodeMove))
+                # print('min_value: ' + str(min_value))
 
                 # max_value = min(node_value, max_value)
                 beta = min(beta, min_value)
 
                 # if pruning is true and beta pass alpha, prune node
                 if pruning == True and beta <= alpha:
+                    # print("broke node " + str(node_state))
                     break
             if isRoot:
                 return [min_value, bestNodeState, bestNodeMove]
@@ -240,12 +257,15 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
         if special_static_eval_fn != None:
             static_eval_fn = special_static_eval_fn
-        if self.who_i_play == 'O':
+        if root_state.whose_move == 'O':
             isMaxNode = False
 
+        # print(isMaxNode)
+        # print(root_state.whose_move)
+
         # run minimax
-        minimax_value, state, move = self.minimax(root_state, (0,0), max_ply, static_eval_fn, True, isMaxNode, use_alpha_beta, ALPHA_DEFAULT, BETA_DEFAULT)
-        print(minimax_value)
+        minimax_value, state, move = self.minimax(root_state, None, max_ply, static_eval_fn, True, isMaxNode, use_alpha_beta, ALPHA_DEFAULT, BETA_DEFAULT)
+        # print("minimax_value: " + str(minimax_value))
         my_choice = [minimax_value, state, move]
         return my_choice
 
