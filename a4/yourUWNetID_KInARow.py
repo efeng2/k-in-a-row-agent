@@ -14,7 +14,7 @@ TO PROVIDE A GOOD STRUCTURE FOR YOUR IMPLEMENTATION.
 '''
 
 from agent_base import KAgent
-from game_types import State, Game_Type
+from game_types import State, Game_Type, FIAR, Cassini, TTT
 
 AUTHORS = 'Jane Smith and Laura Lee'
 
@@ -42,8 +42,12 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         self.zobrist_table_num_entries_this_turn = -1
         self.zobrist_table_num_hits_this_turn = -1
         self.current_game_type = None
-        self.KInARows = {}  #Stores [[list of k in a rows],[evaluations]]
-        self.spaces = {}    #Stores {(i,j): [associated k in a rows]}
+        self.current_state = None
+        self.k_in_a_rows  = {}  #Stores all possible k in a rows and their current scores {{k_in_a_row},score}
+        self.open_spaces  = []  #Stores all available open spaces
+        self.future_kiars = []  #Stores possible k in a rows for future moves where move is ('X',(1,2)) [[move1, {k_in_a_rows}{open_spaces}],[move2, {k_in_a_rows},{open_spaces}, [move2.1, {k_in_a_rows}{open_spaces}]]]]
+        self.space_assoc  = {}  #Stores {(i,j): [associated k in a rows]}
+
 
     def introduce(self):
         intro = '\nMy name is Templatus Skeletus.\n' + \
@@ -149,24 +153,12 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         if not use_existing_KInARows:
             self.KInARows = {}
             self.spaces = {}
+            self.current_state = state
         if not self.KInARows and not self.spaces:
-            self.find_possible_KInARows(state, k)
+            self.find_possible_k_in_a_rows(state, k)
 
         if move is not None:
-            for i in self.spaces[move]:
-                cscore = self.KInARows[i][1]
-                if cscore == 0 and state.whose_move == "X":
-                    self.KInARows[i][1] = 10
-                elif cscore > 0 and state.whose_move == "X":
-                    self.KInARows[i][1] = cscore*10
-                elif cscore < 0 and state.whose_move == "X":
-                    self.KInARows[i][1] = None
-                elif cscore == 0 and state.whose_move == "O":
-                    self.KInARows[i][1] = -10
-                elif cscore > 0 and state.whose_move == "O":
-                    self.KInARows[i][1] = None
-                elif cscore < 0 and state.whose_move == "O":
-                    self.KInARows[i][1] = cscore*10
+            new_k_in_a_rows, new_space_assoc, new_open_spaces = eval_move(move, self.k_in_a_rows, self.space_assoc, self.open_spaces)
 
         # Find the total score from KInARows
         score = 0
@@ -175,102 +167,108 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
         return score
 
-    def find_possible_KInARows(self, state, k):
-        board = state.board
+    def find_possible_k_in_a_rows(self, state, k):
+        board = []
+        for i, row in enumerate(state.board):
+            new_row = []
+            for j, space in enumerate(row):
+                new_row.append((space,(i,j)))
+            board.append(new_row)
 
-        # Transposed board
-        board_t = [list(row) for row in zip(*board)]
-
-        # Diagonals 1
-        board_d = get_diagonals(board)
-
-        # Diagonals 2
-        board_td = get_diagonals(board_t)
-
-        board_configs = [board, board_t, board_d, board_td]
+        board_t = [list(row) for row in zip(*board)]    # Transposed board
+        board_d = get_diagonals(state.board)  # Diagonals
+        board_configs = [board, board_t, board_d]
 
         for board_config in board_configs:
-            k_in_a_rows,spaces = search_rows(board_config,k)
-            self.KInARows.update(k_in_a_rows)
-            self.spaces.update(spaces)
-
+            search_rows(board,board_config,k,self.k_in_a_rows,self.space_assoc,self.open_spaces)
         return
 
-    # def associate_coordinates(self, state):
-    #     board = state.board
-    #     coordinates = {}
-    #     for i,row in enumerate(board):
-    #         for j,space in enumerate(row):
-    #             for n,k_in_a_row in enumerate(self.KInARows):
-    #                 if (i,j) in k_in_a_row[0]:
-    #                     if coordinates[(i,j)]
-    #                     coordinates[(i,j)] = []
+def eval_move(move, k_in_a_rows, space_assoc, open_spaces):
+    new_k_in_a_rows = k_in_a_rows.copy()
+    new_space_assoc = space_assoc.copy()
+    new_open_spaces = open_spaces.copy()
+    new_open_spaces.remove(move[1])
 
-class NextStateEval(State):
-    def __init__(self, last_move, whose_turn, k_in_a_rows, spaces):
-        super().__init__()
-        self.move = last_move
-        self.whose_turn = whose_turn
-        self.k_in_a_rows = k_in_a_rows.copy()
-        self.spaces = spaces
+    for k_in_a_row in space_assoc[move[1]]:
+        if move[0] == 'X':
+            if k_in_a_rows[k_in_a_row] >= 0:
+                new_k_in_a_rows[k_in_a_row] += 1
+            else:
+                del new_k_in_a_rows[k_in_a_row]
+                new_space_assoc[move[1]].remove(k_in_a_row)
+        elif move[0] == 'O':
+            if k_in_a_rows[k_in_a_row] <= 0:
+                new_k_in_a_rows[k_in_a_row] -= 1
+            else:
+                del new_k_in_a_rows[k_in_a_row]
+                new_space_assoc[move[1]].remove(k_in_a_row)
+    return new_k_in_a_rows, new_space_assoc, new_open_spaces
 
-    def run_eval(self):
-        for k_in_a_row in self.spaces[self.move]:
-            val = self.k_in_a_rows.pop(k_in_a_row)
+def eval_k_in_a_rows(k_in_a_rows):
+    cur_score = 0
+    max_count = 0
+    for kiar in k_in_a_rows:
+        if max_count < abs(k_in_a_rows[kiar]):
+            max_count = abs(k_in_a_rows[kiar])
+            cur_score = k_in_a_rows[kiar]
 
-
-        pass
-
-
-
-
-def search_rows(board,k):
-    k_in_a_rows = {}
-    spaces = {}
-    for i, row in enumerate(board):
-        count = 0
+def search_rows(board,board_config,k,k_in_a_rows,space_assoc,open_spaces):
+    for row in board_config:
         x_count = 0
         o_count = 0
-        for j, space in enumerate(row):
-            if len(row) >= k:
-                if space == ' ':
-                    count += 1
-                elif space == 'X':
-                    if o_count:
-                        count =  0
-                        x_count = 0
-                        o_count = 0
-                    else:
-                        count += 1
-                        x_count += 1
-                elif space == 'O':
-                    if x_count:
-                        count =  0
-                        x_count = 0
-                        o_count = 0
-                    else:
-                        count += 1
-                        o_count += 1
-                elif space == '-':
-                    count = 0
+        indices = []
+        for col in row:
+            space = col[0]
+            i = col[1][0]
+            j = col[1][1]
+            index = (i,j)
+            if space == ' ':
+                indices.append(index)
+                if index not in open_spaces:
+                    open_spaces.append(index)
+            elif space == 'X':
+                if o_count:
                     x_count = 0
                     o_count = 0
+                    indices = []
+                else:
+                    x_count += 1
+                    indices.append(index)
+            elif space == 'O':
+                if x_count:
+                    x_count = 0
+                    o_count = 0
+                    indices = []
+                else:
+                    o_count += 1
+                    indices.append(index)
+            elif space == '-':
+                x_count = 0
+                o_count = 0
+                indices = []
 
-            if count >= k:
-                indices = {(i,x+1) for x in range(j-k,j)}
+            if len(indices) == k:
+                kiar_indices = frozenset(indices)
                 if x_count and o_count:
                     raise Exception("x_count or o_count should be 0")
-                score = x_count**10 - o_count**10
-                new_k_in_a_row = [indices,score]
-                k_in_a_rows.append(new_k_in_a_row)
+                score = x_count - o_count
+                new_k_in_a_row = {kiar_indices:score}
+                k_in_a_rows.update(new_k_in_a_row)
 
-
-                for index in indices:
-                    if index in spaces:
-                        spaces[index].append(new_k_in_a_row)
+                for kiar_index in kiar_indices:
+                    if kiar_index in space_assoc:
+                        space_assoc[kiar_index].append(kiar_indices)
                     else:
-                        spaces[index] = [new_k_in_a_row]
-    return k_in_a_rows,spaces
+                        space_assoc[kiar_index] = [kiar_indices]
+
+                if board[indices[0][0]][indices[0][1]][0] == 'X':
+                    x_count -= 1
+                elif board[indices[0][0]][indices[0][1]][0] == 'O':
+                    o_count -= 1
+
+                indices = indices[1:]
+
+    return
 
 def get_diagonals(board):
     diags = []
@@ -286,19 +284,33 @@ def get_diagonals(board):
                 index = (i + j, j)
             else:
                 continue
-            diag.append(board[index[0]][index[1]])
+            diag.append((board[index[0]][index[1]],index))
+        if diag:
+            diags.append(diag)
+
+    for i in range(l + h - 1, -1, -1):
+        diag = []
+
+        for j in range(l):
+
+            if i - j < h and i - j >= 0:
+                index = (i - j, j)
+            else:
+                continue
+            diag.append((board[index[0]][index[1]],index))
         if diag:
             diags.append(diag)
 
     return diags
 
-# Figure out who the other player is.
-# For example, other("X") = "O".
+
+
 def other(p):
+    # Figure out who the other player is.
+    # For example, other("X") = "O".
     if p=='X': return 'O'
     return 'X'
 
-# Randomly choose a move.
 def chooseMove(statesAndMoves):
     # states, moves = statesAndMoves
     # if states==[]: return None
@@ -308,9 +320,10 @@ def chooseMove(statesAndMoves):
 
 # The following is a Python "generator" function that creates an
 # iterator to provide one move and new state at a time.
-# It could be used in a smarter agent to only generate SOME of
+# It could be used in a smarter agent to only generate SOME
 # of the possible moves, especially if an alpha cutoff or beta
 # cutoff determines that no more moves from this state are needed.
+
 def move_gen(state):
     b = state.board
     p = state.whose_move
@@ -333,7 +346,7 @@ def successors_and_moves(state):
         new_states.append(item[1])
     return [new_states, moves]
 
-# Performa a move to get a new state.
+# Perform a move to get a new state.
 def do_move(state, i, j, o):
     news = State(old=state)
     news.board[i][j] = state.whose_move
@@ -347,9 +360,46 @@ def do_move(state, i, j, o):
 #  OPPONENT_PAST_UTTERANCES = []
 #  UTTERANCE_COUNT = 0
 #  REPEAT_COUNT = 0 or a table of these if you are reusing different utterances
+if __name__ == '__main__':
+    start = time.time()
+    mocha = OurAgent()
+    mocha.find_possible_k_in_a_rows(TTT.initial_state,3)
+    # fig = search_rows(Cassini.initial_state.board,5)[0]
+    fig = mocha.k_in_a_rows
+    end = time.time()
+    print((end - start))
+    count = 0
+    for entry in fig:
+        print(str(entry)+"  ---  "+str(fig[entry]))
+        count +=1
 
-list1 = [[0, 1], [2, 3]]
+    print(count)
+    count = 0
 
-diag = get_diagonals(list1)
+    sam = mocha.open_spaces
+    for entry in sam:
+        print(str(entry))
+        count+=1
 
-print(diag)
+    print(count)
+
+    puggle = eval_move(('X',(0,1)),fig,mocha.space_assoc,sam)
+
+    print('new')
+
+    puggle0 = puggle[0]
+    puggle1 = puggle[1]
+    puggle2 = puggle[2]
+
+    for entry in puggle0:
+        print(str(entry) +"  ---  "+str(puggle0[entry]))
+
+    for entry in puggle1:
+        print(str(entry)+"  ---  "+str(puggle1[entry]))
+
+    for entry in puggle2:
+        print(str(entry))
+
+
+    print(TTT.initial_state)
+

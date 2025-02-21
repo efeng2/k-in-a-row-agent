@@ -21,6 +21,19 @@ for i in range(-l,h):
     if diag:
         diags.append(diag)
 
+# for i in range(l+h-1,-1,-1):
+#     diag = []
+#
+#     for j in range(l):
+#
+#         if i-j<h and i-j>=0:
+#             index = (i-j,j)
+#         else:
+#             continue
+#         diag.append(new_list[index[0]][index[1]])
+#     if diag:
+#         diags.append(diag)
+
 diags2 = []
 
 

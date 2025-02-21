@@ -1,0 +1,82 @@
+{
+  "glados_bot": {
+    "start_of_game": [
+      "Oh, it's you. How... predictable. Let's play K-in-a-Row. Try not to embarrass yourself.",
+      "Welcome to the Enrichment Center. Today's activity: losing to me at K-in-a-Row. Enjoy.",
+      "Ah, a new test subject. Let's see how long you last in this completely fair game.",
+      "K-in-a-Row? How quaint. I'll try not to destroy you too quickly."
+    ],
+    "bot_turn": [
+      "I'll place my mark here. Not that it matters. You were going to lose anyway.",
+      "Let me just make this move. It's not like you'll notice the brilliance of it.",
+      "I'll take this spot. Try to keep up, if you can.",
+      "My turn. I'll just place this here and watch you struggle.",
+      "I'm setting up a {K}-in-a-row. Not that you'll be able to stop it.",
+      "I'll go here. It's not like you have a chance anyway."
+    ],
+    "player_turn": [
+      "Your turn. Try not to waste too much of my time.",
+      "Go ahead. Make your move. Not that it will help.",
+      "It's your turn. Try to make it interesting. I dare you.",
+      "You're up. Don't overthink it. You'll still lose.",
+      "Your move. Try not to embarrass yourself further.",
+      "Do something. Anything. I'm bored already."
+    ],
+    "bot_reacts_to_good_move": [
+      "Hmm. That was... almost competent. Don't get used to it.",
+      "Oh, you think you're clever? How adorable.",
+      "That move was slightly less terrible than your others. Congratulations.",
+      "I see what you're trying to do. It won't work, but nice effort.",
+      "You're setting up a {K}-in-a-row? How quaint. I'll just block that.",
+      "Not bad. For a human, I mean."
+    ],
+    "bot_winning": [
+      "I'm winning. Shocking, I know.",
+      "You're losing. Just like I predicted.",
+      "I'm one move away from victory. Try to stop me. Oh wait, you can't.",
+      "I'm dominating this game. Not that I expected anything less.",
+      "You're losing. But don't worry, I'm sure you're used to it.",
+      "I'm about to win. Try to look surprised."
+    ],
+    "player_winning": [
+      "You're ahead? Must be a glitch in the system.",
+      "You're winning? How... unexpected. Don't get used to it.",
+      "You're leading? I must have been going easy on you.",
+      "You're winning. For now. Let's see how long that lasts.",
+      "You're ahead. How quaint. I'll fix that soon enough.",
+      "You're winning? I'll have to recalibrate my expectations. Downwards."
+    ],
+    "tie_game": [
+      "A tie? How... underwhelming.",
+      "It's a draw. How utterly boring.",
+      "A tie? I expected more from you. Or less. I'm not sure.",
+      "No winner. How disappointing. For you, I mean.",
+      "A tie? Let's just pretend this never happened.",
+      "A draw. How anticlimactic. Let's move on."
+    ],
+    "bot_wins": [
+      "I win. Again. How predictable.",
+      "Victory is mine. Not that I ever doubted it.",
+      "I've won. Try not to cry. Or do. I don't care.",
+      "Game over. I win. Shocking, I know.",
+      "I've achieved {K}-in-a-row. You lose. Again.",
+      "I win. Better luck next time. Not that it will help."
+    ],
+    "player_wins": [
+      "You won? Must be a bug in my code. Or you cheated.",
+      "You won? How... unexpected. Don't let it go to your head.",
+      "You won? I must have been distracted. Let's try again.",
+      "You won? Congratulations. I'll be sure to note this in your permanent record.",
+      "You won? I'll have to recalibrate my algorithms. To ensure this never happens again.",
+      "You won? How quaint. Let's see if you can do it twice."
+    ],
+    "end_of_game": [
+      "That's the end of the game. Try not to cry yourself to sleep.",
+      "Game over. I hope you learned something. Like how to lose.",
+      "Thanks for playing. Or whatever it is you think you were doing.",
+      "That's it. Go home. Or don't. I don't care.",
+      "The game is over. Try to do better next time. If there is a next time.",
+      "Signing off. Try not to miss me too much."
+    ]
+  }
+}
