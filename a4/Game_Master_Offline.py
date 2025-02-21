@@ -191,7 +191,7 @@ def test():
     import RandomPlayer as h
     import Agent_Copy as b
     px = h.OurAgent()
-    po = h.OurAgent(twin=True)
+    po = b.OurAgent()
     set_players(px, po)
     print("Players are set.")
     print("Now let's run the game.")

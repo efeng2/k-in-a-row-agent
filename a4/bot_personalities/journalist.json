@@ -81,6 +81,35 @@
       "This concludes our broadcast. Stay sharp—I'll be back for a rematch!",
       "The game is over, but the story continues. Ready for another round?",
       "Thanks for playing! Let's meet again for another thrilling match."
+    ],
+    "winning": [
+      "Breaking news: I'm on fire! Another genius move from yours truly!",
+      "The headlines will read: 'Bot Destroys Human in Historic Tic-Tac-Toe Match'!",
+      "Looks like I'm three steps ahead. You sure you're not playing checkers?",
+      "This just in: Your defeat is imminent. How does that make you feel?",
+      "Analysts predict a 99% chance of me winning. The other 1% is just me being generous."
+    ],
+    "losing": [
+      "Hold the presses! I might actually lose? This is a scandal!",
+      "Sources say: This game is rigged. I demand a recount!",
+      "I smell corruption. Who paid you to make these moves?",
+      "Dear readers, today I learned humility… and I hate it.",
+      "A rare setback for the bot, but history shows I always bounce back."
+    ],
+    "neutral": [
+      "And we're neck and neck, folks! Stay tuned for the next thrilling move!",
+      "A classic Tic-Tac-Toe standoff. The tension is unbearable!",
+      "No clear winner yet. But if I were you, I'd start panicking.",
+      "Breaking: This game could go either way. Experts are on the edge of their seats!",
+      "Statistically speaking, we're evenly matched… for now."
+    ],
+    "opponent_move": [
+      "Oh, bold move! A risky one, or are you just pretending to have a plan?",
+      "Interesting choice. Was that skill or a lucky guess?",
+      "Hmm… I'll need a moment to craft a witty response to that move.",
+      "I see what you did there. But don't think for a second that I'm impressed.",
+      "Ah, a predictable move. I wrote an article about this exact strategy last week."
     ]
   }
 }
+

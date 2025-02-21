@@ -30,9 +30,9 @@ BETA_DEFAULT = 10000000
 # MINIMAX_DEPTH = 2
 
 # For utterances to change according to game state
-WIN_THRESHOLD = 100000
-LOSE_THRESHOLD = 100000
-NUETRAL_THRESHOLD = 5000
+# WIN_THRESHOLD = 100000
+# LOSE_THRESHOLD = 10000
+NUETRAL_THRESHOLD = 5
 
 
 
@@ -42,7 +42,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
     def __init__(self, twin=False):
         self.twin=twin
-        self.nickname = 'OurAgent'
+        self.nickname = 'TicTacTimes'
         if twin: self.nickname += '2'
         self.long_name = 'IBOT3000'
         if twin: self.long_name += ' II'
@@ -54,12 +54,21 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         self.zobrist_table_num_entries_this_turn = -1
         self.zobrist_table_num_hits_this_turn = -1
         self.current_game_type = None
+        self.my_past_utterances = []
+        self.utt_count = 0
+
+        # Quick Booleans for utterance control
+        self.win = False
+        self.lose = False
+        self.tie = False
+        
         self.XKInARows = []
         self.OKInARows = []
 
     def introduce(self):
-        intro = 'HELLO I AM TEST BOT'
-        if self.twin: intro += " TOO"
+        intro = '"Good evening, dear reader! I\'m TicTacTimes, the world\'s first AI journalist dedicated to hard-hitting Tic-Tac-Toe coverage. Reporting live from The Daily Grid!'
+        if self.twin:
+            intro = '"Good evening, dear reader! I\'m TicTacTimes, the world\'s first AI journalist dedicated to hard-hitting Tic-Tac-Toe coverage. Reporting live from The Daily Grid!'
         return intro
 
     # Receive and acknowledge information about the game from
@@ -72,7 +81,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         expected_time_per_move = 0.1, # Time limits can be
                                       # changed mid-game by the game master.
 
-        utterances_matter=True):      # If False, just return 'OK' for each utterance,
+        utterances_matter=False):      # If False, just return 'OK' for each utterance,
                                       # or something simple and quick to compute
                                       # and do not import any LLM or special APIs.
                                       # During the tournament, this will be False..
@@ -86,11 +95,15 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
        self.time_limit = expected_time_per_move
        global GAME_TYPE
        GAME_TYPE = game_type
-       print("I CAN WIN AT", game_type.long_name)
+       print("Breaking news: A thrilling game of Tic-Tac-Toe is about to begin! You vs. me. Let's see who makes headlines.", game_type.long_name)
        self.my_past_utterances = []
-       # self.opponent_past_utterances = []
+
+       self.win = False
+       self.lose = False
+       self.tie = False
+
        self.utt_count = 0
-       if self.twin: self.utt_count = 5 # Offset the twin's utterances.
+       if self.twin: self.utt_count = 5
            
        # Write code to save the relevant information in variables
        # local to this instance of the agent.
@@ -102,7 +115,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                   autograding=False, use_alpha_beta=True,
                   use_zobrist_hashing=False, max_ply=3,
                   special_static_eval_fn=None):
-        print("make_move has been called")
+        #print("make_move has been called")
 
         myMove = self.chooseMove(current_state, use_alpha_beta, special_static_eval_fn, max_ply)
         minimax_value, newState, newMove = myMove
@@ -112,25 +125,38 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         return [[newMove, newState], myUtterance]
     
     def nextUtterance(self, minimax_value):
-        # if self.repeat_count > 1: return "I'M TESTING."
         utterances = UTTERANCE_BANK
 
-        if minimax_value > WIN_THRESHOLD:
-            return WIN_UTTERANCE
+        if self.who_i_play == "O":
+            minimax_value = - minimax_value
+
+        if self.win:
+            utterances = WIN_UTTERANCE
+        elif self.lose:
+            utterances = LOSE_UTTERANCE
+        elif self.tie:
+            utterances = TIE_UTTERANCE
         elif minimax_value > NUETRAL_THRESHOLD:
             utterances = HAPPY_UTTERANCE
-        elif minimax_value < - NUETRAL_THRESHOLD:
+        elif minimax_value < (- NUETRAL_THRESHOLD):
             utterances = SAD_UTTERANCE
-        elif minimax_value < - LOSE_THRESHOLD:
-            return LOSE_UTTERANCE
 
         n = len(utterances)
-        #if self.utt_count == n:
-            #self.utt_count = 0
+        
         random_index = randint(0, n-1)
-
         this_utterance = utterances[random_index]
-        #self.utt_count += 1
+
+        # just in case for less repetition...
+        while this_utterance in self.my_past_utterances:
+            random_index = randint(0, n-1)
+            this_utterance = utterances[random_index]
+
+        self.my_past_utterances.append(this_utterance)
+        self.utt_count += 1
+
+        if self.utt_count > len(UTTERANCE_BANK):
+            self.my_past_utterances = []
+
         return this_utterance
    
 
@@ -150,8 +176,8 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         child_nodes, moves = successors_and_moves(state)
         
         if (depth_remaining == 0 or child_nodes==[]):
+            #print([alpha, beta])
             node_value = static_eval_fn(state)
-            # print(str(node_value) + ' ' + str(move))
 
             return [node_value, state, move]
 
@@ -219,18 +245,22 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
         # run minimax
         minimax_value, state, move = self.minimax(root_state, (0,0), max_ply, static_eval_fn, True, isMaxNode, use_alpha_beta, ALPHA_DEFAULT, BETA_DEFAULT)
-
+        print(minimax_value)
         my_choice = [minimax_value, state, move]
         return my_choice
 
     def static_eval(self, state, game_type=None, use_existing_KInARows=False, move=None):
-        print('calling static_eval.')
+        # print('calling static_eval.')
         # Values should be higher when the states are better for X,
         # lower when better for O.
 
         # Assumes K value of 3 if no game type specified
         total_score = 0
-        k = game_type.k
+        k = 3
+        
+
+        if game_type != None:
+            k = game_type.k
 
         if not use_existing_KInARows:
             self.XKInARows = [] # horizontal, vertical, diagonalLeft, diagonalRight
@@ -240,9 +270,10 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
             self.find_possible_KInARows(state, k)
 
         for i in range(len(self.XKInARows)):
-            total_score += 2^self.XKInARows[i]
-            total_score += -2^self.OKInARows[i]
+            total_score += self.XKInARows[i]
+            total_score += (-1) * self.OKInARows[i]
 
+        #print(total_score)
         return total_score
 
     def find_possible_KInARows(self, state, k):
@@ -250,17 +281,19 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
         # Transposed board
         board_t = [list(row) for row in zip(*board)]
+        # print(board_t)
 
         # Diagonals 1
         board_d = get_diagonals(board)
 
         # Diagonals 2
-        board_td = get_diagonals(board_t)
+        board_r = list(zip(*board[::-1]))
+        board_td = get_diagonals(board_r)
 
         board_configs = [board, board_t, board_d, board_td]
 
         for board_config in board_configs:
-            numXKInARows, numOKInARows = search_rows(board_config,k)
+            numXKInARows, numOKInARows = search_rows(board_config, k)
 
             self.XKInARows.append(numXKInARows)
             self.OKInARows.append(numOKInARows)
@@ -306,17 +339,39 @@ def do_move(state, i, j, o):
             news.whose_move = o
             return news
 
-UTTERANCE_BANK = ["TESTING PHRASE 1",
-                  "TESTING PHRASE 2",
-                  "TESTING PHRASE 3"]
+# For Good Game and Bad Game
+UTTERANCE_BANK = ["Statistically speaking, we're evenly matched… for now.",
+                  "Hmm… I'll need a moment to craft a witty response to that move...",
+                  "And we're neck and neck, folks! Stay tuned for the next thrilling move!",
+                  "A classic Tic-Tac-Toe standoff. The tension is unbearable!",
+                  "No clear winner yet. But if I were you, I'd start panicking.",
+                  " This game could go either way. Experts are on the edge of their seats!"
+                  ]
 
-WIN_UTTERANCE = ["BOT WIN"]
+SAD_UTTERANCE = ["You're in the lead, but I'm digging for a counter-strategy.",
+                 "Hold the presses! I might actually lose? This is a scandal!",
+                 "A rare setback, but history shows I always bounce back.",
+                 "I see what you did there. But don't think for a second that I'm impressed.",
+                 "My dignity is under attack. Developing story—please send help!",
+                 "This is just a strategic loss to keep things interesting. Stay tuned."]
 
-LOSE_UTTERANCE = ["BOT LOSE"]
+HAPPY_UTTERANCE = ["Breaking: My strategy is paying off. You're on the ropes!",
+                   "Looks like I'm three steps ahead. You sure you're not playing checkers?",
+                   "This just in: Your defeat is imminent. How does that make you feel?",
+                   "Analysts predict a 99% \chance of me winning. The other 1% \is just me being generous.",
+                   "Interesting choice. Was that skill or a lucky guess?",
+                   "Ah, a predictable move. I wrote an article about this exact strategy last week.",
+                   "Oh, bold move! A risky one, or are you just pretending to have a plan?",
+                   "Breaking news: I'm on fire! Another genius move from yours truly!"
+                   ]
 
-SAD_UTTERANCE = ["BOT SAD", "BOT SADDER"]
+# For end game
+TIE_UTTERANCE = ["This just in: A tie! The crowd goes wild... or maybe just yawns."]
 
-HAPPY_UTTERANCE = ["BOT HAPPY", "BOT HAPPIER"]
+WIN_UTTERANCE = ["Breaking news: I win! Another victory for the history books! I'll be looking forward to tomorrow's headline!"]
+
+LOSE_UTTERANCE = ["You've emerged victorious. I'll be needing to analyze this loss in tomorrow's edition...",
+                  "Dear readers, today I learned humility… and I hate it."]
 
 def test():
     global GAME_TYPE
@@ -334,17 +389,6 @@ def test():
 if __name__=="__main__":
     test()
 
- 
-# OPTIONAL THINGS TO KEEP TRACK OF:
-
-#  WHO_MY_OPPONENT_PLAYS = other(WHO_I_PLAY)
-#  MY_PAST_UTTERANCES = []
-#  OPPONENT_PAST_UTTERANCES = []
-#  UTTERANCE_COUNT = 0
-#  REPEAT_COUNT = 0 or a table of these if you are reusing different utterances
-
-
-
 def search_rows(board, k):
     numXKInARows = 0
     numOKInARows = 0
@@ -358,15 +402,16 @@ def search_rows(board, k):
         o_count = 0
 
         for j, space in enumerate(row):
-            
+
             if space == ' ':
                 blank_count_x += 1
+                blank_count_o += 1
 
             elif space == 'X':
 
                 # end o counter
                 if blank_count_o >= k:
-                    numOKInARows += blank_count_o - k + 1
+                    numOKInARows += blank_count_o - k + 1 * (10 ** o_count)
                 blank_count_o = 0
                 o_count = 0
 
@@ -378,7 +423,7 @@ def search_rows(board, k):
 
                 # end x counter
                 if blank_count_x >= k:
-                    numXKInARows += blank_count_x - k + 1
+                    numXKInARows += (blank_count_x - k + 1) * (10 ** x_count)
                 blank_count_x = 0
                 x_count = 0
                 
@@ -390,9 +435,9 @@ def search_rows(board, k):
                 
                 # end both counters
                 if blank_count_x >= k:
-                    numXKInARows += blank_count_o - k + 1
+                    numXKInARows += (blank_count_x - k + 1) * (10 ** x_count)
                 if blank_count_o >= k:
-                    numOKInARows += blank_count_o - k + 1
+                    numOKInARows += blank_count_o - k + 1 * (10 ** o_count)
                 
                 # reset
                 blank_count_o = 0
@@ -400,18 +445,14 @@ def search_rows(board, k):
                 x_count = 0
                 o_count = 0
 
-            # if count >= k:
-            #     indices = {(i,x+1) for x in range(j-k,j)}
-            #     if x_count and o_count:
-            #         raise Exception("x_count or o_count should be 0")
-            #     score = x_count**10 - o_count**10
-            #     k_in_a_rows.append([indices,score])
-
-            #     for index in indices:
-            #         if index in spaces:
-            #             spaces[index].append(len(k_in_a_rows))
-            #         else:
-            #             spaces[index] = [len(k_in_a_rows)]
+        if blank_count_x >= k:
+            numXKInARows += (blank_count_x - k + 1) * (10 ** x_count)
+        if blank_count_o >= k:
+            numOKInARows += blank_count_o - k + 1 * (10 ** o_count)
+        blank_count_o = 0
+        blank_count_x = 0
+        x_count = 0
+        o_count = 0
 
     return [numXKInARows, numOKInARows]
 
@@ -432,5 +473,4 @@ def get_diagonals(board):
             diag.append(board[index[0]][index[1]])
         if diag:
             diags.append(diag)
-
     return diags
