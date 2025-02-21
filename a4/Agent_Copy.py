@@ -42,17 +42,17 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
     def __init__(self, twin=False):
         self.twin=twin
-        self.nickname = 'TicTacTimes'
-        if twin: self.nickname += '2'
-        self.long_name = 'IBOT3000'
-        if twin: self.long_name += ' II'
-        self.persona = 'bland'
+        self.nickname = 'Times'
+        if twin: self.nickname += ' II'
+        self.long_name = 'TicTacTimes'
+        if twin: self.long_name += ' the II'
+        self.persona = 'snarky'
         self.voice_info = {'Chrome': 10, 'Firefox': 2, 'other': 0}
         self.playing = "don't know yet" # e.g., "X" or "O".
-        self.alpha_beta_cutoffs_this_turn = -1
-        self.num_static_evals_this_turn = -1
-        self.zobrist_table_num_entries_this_turn = -1
-        self.zobrist_table_num_hits_this_turn = -1
+        # self.alpha_beta_cutoffs_this_turn = -1
+        # self.num_static_evals_this_turn = -1
+        # self.zobrist_table_num_entries_this_turn = -1
+        # self.zobrist_table_num_hits_this_turn = -1
         self.current_game_type = None
         self.my_past_utterances = []
         self.utt_count = 0
@@ -68,7 +68,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
     def introduce(self):
         intro = '"Good evening, dear reader! I\'m TicTacTimes, the world\'s first AI journalist dedicated to hard-hitting Tic-Tac-Toe coverage. Reporting live from The Daily Grid!'
         if self.twin:
-            intro = '"Good evening, dear reader! I\'m TicTacTimes, the world\'s first AI journalist dedicated to hard-hitting Tic-Tac-Toe coverage. Reporting live from The Daily Grid!'
+            intro = '"And I\'m TicTacTimes the II, I don\'t sugarcoat the truth. Together, we\'re the most unstoppable duo in Tic-Tac-Toe reporting history.'
         return intro
 
     # Receive and acknowledge information about the game from
