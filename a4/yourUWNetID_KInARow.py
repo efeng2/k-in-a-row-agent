@@ -24,6 +24,7 @@ import time  # You'll probably need this to avoid losing a
 # game due to exceeding a time limit.
 
 # Create your own type of agent by subclassing KAgent:
+GAME_TYPE = None
 
 class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
     # knows how to instantiate your agent class.
@@ -47,6 +48,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         self.open_spaces  = []  #Stores all available open spaces
         self.future_kiars = []  #Stores possible k in a rows for future moves where move is ('X',(1,2)) [[move1, {k_in_a_rows}{open_spaces}],[move2, {k_in_a_rows},{open_spaces}, [move2.1, {k_in_a_rows}{open_spaces}]]]]
         self.space_assoc  = {}  #Stores {(i,j): [associated k in a rows]}
+        self.t_start = None
 
 
     def introduce(self):
@@ -90,6 +92,8 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         self.utt_count = 0
         if self.twin: self.utt_count = 5  # Offset the twin's utterances.
 
+        self.find_possible_k_in_a_rows(game_type.initial_state,game_type.k)
+
         return "OK"
 
     # The core of your agent's ability should be implemented here:
@@ -99,20 +103,16 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                   special_static_eval_fn=None):
         print("make_move has been called")
 
-        possibleMoves = successors_and_moves(current_state)
+        self.t_start = time.time()
 
-        # Here's a placeholder:
-        a_default_move = (0, 0)  # This might be legal ONCE in a game,
-        # if the square is not forbidden or already occupied.
-
-        new_state = current_state  # This is not allowed, and even if
-        # it were allowed, the newState should be a deep COPY of the old.
+        old_state = self.current_state
+        self.current_state = current_state
 
         new_remark = "I need to think of something appropriate.\n" + \
                      "Well, I guess I can say that this move is probably illegal."
 
         print("Returning from make_move")
-        return [[a_default_move, new_state], new_remark]
+        return [[chosen_move, new_state], new_remark]
 
     # The main adversarial search function:
     def minimax(self,
@@ -122,6 +122,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                 alpha=None,
                 beta=None):
         print("Calling minimax. We need to implement its body.")
+
         if not pruning:
             if depth_remaining == 0:
                 return self.static_eval(state,GAME_TYPE)
@@ -129,6 +130,11 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                 prov = -100000
             else:
                 prov = 100000
+            for move in self.open_spaces:
+                if state.whose_move == 'X':
+                    eval_move(('X',move),self.k_in_a_rows,self.space_assoc,self.open_spaces)
+                elif state.whose_move == 'O':
+                    eval_move(('O',move),self.k_in_a_rows,self.space_assoc,self.open_spaces)
            # for s in successors()
 
         default_score = 0  # Value of the passed-in state. Needs to be computed.
@@ -189,6 +195,7 @@ def eval_move(move, k_in_a_rows, space_assoc, open_spaces):
     new_open_spaces = open_spaces.copy()
     new_open_spaces.remove(move[1])
 
+    # Updates the new k_in_a_row values
     for k_in_a_row in space_assoc[move[1]]:
         if move[0] == 'X':
             if k_in_a_rows[k_in_a_row] >= 0:
@@ -202,15 +209,23 @@ def eval_move(move, k_in_a_rows, space_assoc, open_spaces):
             else:
                 del new_k_in_a_rows[k_in_a_row]
                 new_space_assoc[move[1]].remove(k_in_a_row)
+    eval_k_in_a_rows(new_k_in_a_rows)
     return new_k_in_a_rows, new_space_assoc, new_open_spaces
 
 def eval_k_in_a_rows(k_in_a_rows):
     cur_score = 0
     max_count = 0
+    if 'score' in k_in_a_rows:
+        del k_in_a_rows['score']
     for kiar in k_in_a_rows:
         if max_count < abs(k_in_a_rows[kiar]):
             max_count = abs(k_in_a_rows[kiar])
             cur_score = k_in_a_rows[kiar]
+        elif max_count == abs(k_in_a_rows[kiar]):
+            cur_score += k_in_a_rows[kiar]
+    score = 10**max_count*cur_score
+    k_in_a_rows.update({'score':score})
+    return
 
 def search_rows(board,board_config,k,k_in_a_rows,space_assoc,open_spaces):
     for row in board_config:
@@ -267,7 +282,7 @@ def search_rows(board,board_config,k,k_in_a_rows,space_assoc,open_spaces):
                     o_count -= 1
 
                 indices = indices[1:]
-
+    eval_k_in_a_rows(k_in_a_rows)
     return
 
 def get_diagonals(board):
@@ -361,13 +376,13 @@ def do_move(state, i, j, o):
 #  UTTERANCE_COUNT = 0
 #  REPEAT_COUNT = 0 or a table of these if you are reusing different utterances
 if __name__ == '__main__':
-    start = time.time()
+
     mocha = OurAgent()
-    mocha.find_possible_k_in_a_rows(TTT.initial_state,3)
+    mocha.prepare(FIAR,'X','fig')
     # fig = search_rows(Cassini.initial_state.board,5)[0]
     fig = mocha.k_in_a_rows
-    end = time.time()
-    print((end - start))
+
+
     count = 0
     for entry in fig:
         print(str(entry)+"  ---  "+str(fig[entry]))
@@ -383,7 +398,11 @@ if __name__ == '__main__':
 
     print(count)
 
+    start = time.time()
     puggle = eval_move(('X',(0,1)),fig,mocha.space_assoc,sam)
+    # x = eval_k_in_a_rows((puggle[0]))
+    end = time.time()
+
 
     print('new')
 
@@ -401,5 +420,11 @@ if __name__ == '__main__':
         print(str(entry))
 
 
+
+
     print(TTT.initial_state)
+    print((end - start) * 100000)
+
+
+
 
