@@ -194,8 +194,8 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
                 utterance_bank_op = STORY_MISTAKE_UTTERANCE_OP
 
                 # special
-                if self.past_moves == (m/2,n/2):
-                    utterance += "\n I placed my mark in the center with " + str((m/2,n/2)) + " —— textbook dominance. It’s super effective!"
+                if self.past_moves[i] == ((m-1)/2,(n-1)/2):
+                    utterance += "\n I placed my mark in the center with " + str((int((m-1)/2),int((n-1)/2))) + " —— textbook dominance. It’s super effective!"
                 else:
                 # if i play good
                     if self.who_i_play == "X":
@@ -263,7 +263,11 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
             #     utterances = WIN_UTTERANCE
             # elif self.lose:
             #     utterances = LOSE_UTTERANCE
-            if self.utt_count < 1:
+            #special
+            if self.past_moves != [] and self.past_moves[len(self.past_moves)-1] == ((m-1)/2,(n-1)/2):
+                utterance += "Argh, the center is taken! You must be a professional..."
+                return utterance
+            elif self.utt_count < 1:
                 utterances = FIRST_UTTERANCE
             # elif self.tie:
             #     utterances = TIE_UTTERANCE
@@ -523,7 +527,7 @@ UTTERANCE_BANK = ["Statistically speaking, we're evenly matched... for now.",
                   " This game could go either way. Experts are on the edge of their seats!"
                   ]
 
-# Test bank
+#Test bank
 # UTTERANCE_BANK = [
 #     "Tell me how you did that",
 #     "Tell me how you did that",
