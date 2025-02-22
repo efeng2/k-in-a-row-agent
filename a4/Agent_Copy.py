@@ -515,22 +515,23 @@ def do_move(state, i, j, o):
             return news
 
 # For Good Game and Bad Game
-# UTTERANCE_BANK = ["Statistically speaking, we're evenly matched... for now.",
-#                   "Hmm… I'll need a moment to craft a witty response to that move...",
-#                   "And we're neck and neck, folks! Stay tuned for the next thrilling move!",
-#                   "A classic " + global_game_type + " standoff. The tension is unbearable!",
-#                   "It's going to be a tie!!",
-#                   " This game could go either way. Experts are on the edge of their seats!"
-#                   ]
+UTTERANCE_BANK = ["Statistically speaking, we're evenly matched... for now.",
+                  "Hmm… I'll need a moment to craft a witty response to that move...",
+                  "And we're neck and neck, folks! Stay tuned for the next thrilling move!",
+                  "A classic " + global_game_type + " standoff. The tension is unbearable!",
+                  "It's going to be a tie!!",
+                  " This game could go either way. Experts are on the edge of their seats!"
+                  ]
 
-UTTERANCE_BANK = [
-    "Tell me how you did that",
-    "Tell me how you did that",
-    "Tell me how you did that",
-    "What's your take on the game so far?",
-    "What's your take on the game so far?",
-    "What's your take on the game so far?"
-]
+# Test bank
+# UTTERANCE_BANK = [
+#     "Tell me how you did that",
+#     "Tell me how you did that",
+#     "Tell me how you did that",
+#     "What's your take on the game so far?",
+#     "What's your take on the game so far?",
+#     "What's your take on the game so far?"
+# ]
 
 SAD_UTTERANCE = ["You're in the lead, but I'm digging for a counter-strategy.",
                  "Hold the presses! I might actually lose? This is a scandal!",
