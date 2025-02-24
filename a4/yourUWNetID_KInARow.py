@@ -15,10 +15,15 @@ TO PROVIDE A GOOD STRUCTURE FOR YOUR IMPLEMENTATION.
 
 from agent_base import KAgent
 from game_types import State, Game_Type, FIAR, Cassini, TTT
+import copy
+import time  # You'll probably need this to avoid losing a
 
 AUTHORS = 'Jane Smith and Laura Lee'
 
-import time  # You'll probably need this to avoid losing a
+
+
+gl_start_time = 0
+gl_end_time = 0
 
 
 # game due to exceeding a time limit.
@@ -44,11 +49,11 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         self.zobrist_table_num_hits_this_turn = -1
         self.current_game_type = None
         self.current_state = None
-        self.k_in_a_rows  = {}  #Stores all possible k in a rows and their current scores {{k_in_a_row},score}
+        self.k_in_a_rows  = {}  #Stores all possible k in a rows and their current scores {{k_in_a_row}:score}
         self.open_spaces  = []  #Stores all available open spaces
-        self.future_kiars = []  #Stores possible k in a rows for future moves where move is ('X',(1,2)) [[move1, {k_in_a_rows}{open_spaces}],[move2, {k_in_a_rows},{open_spaces}, [move2.1, {k_in_a_rows}{open_spaces}]]]]
-        self.space_assoc  = {}  #Stores {(i,j): [associated k in a rows]}
-        self.t_start = None
+        self.space_assoc = {}  #Stores {(i,j): [associated k in a rows]}
+        self.states_dict = {} # {board: {'k_in_a_rows':, 'open_spaces':, 'parents':, 'eval':, 'whose_move':}}
+        self.t_start = None   # timer initialization value
 
 
     def introduce(self):
@@ -85,7 +90,6 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         self.time_limit = expected_time_per_move
         global GAME_TYPE
         GAME_TYPE = game_type
-        print("Oh, I love playing randomly at ", game_type.long_name)
         self.my_past_utterances = []
         self.opponent_past_utterances = []
         self.repeat_count = 0
@@ -93,11 +97,23 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         if self.twin: self.utt_count = 5  # Offset the twin's utterances.
 
         self.find_possible_k_in_a_rows(game_type.initial_state,game_type.k)
+        hashable_board = tuple(map(tuple,game_type.initial_state.board))
+        self.states_dict[hashable_board] = {'k_in_a_rows':self.k_in_a_rows, 'open_spaces':self.open_spaces, 'parents':None, 'whose_move':game_type.initial_state.whose_move}
+
+        whose_next = None
+        if game_type.initial_state.whose_move == 'X': whose_next = 'O'
+        else: whose_next = 'X'
+
+        for space in self.open_spaces:
+            new_board = copy.deepcopy(game_type.initial_state.board)
+            new_board[space[0]][space[1]] = game_type.initial_state.whose_move
+            new_k_in_a_rows, new_open_spaces = eval_move((game_type.initial_state.whose_move,space),self.k_in_a_rows,self.space_assoc,self.open_spaces)
+            self.states_dict.update({tuple(map(tuple,new_board)):{'k_in_a_rows':new_k_in_a_rows, 'open_spaces':new_open_spaces, 'parents':[hashable_board], 'whose_move':whose_next}})
 
         return "OK"
 
     # The core of your agent's ability should be implemented here:
-    def make_move(self, current_state, current_remark, time_limit=1000,
+    def make_move(self, cur_state, current_remark, time_limit=1000,
                   autograding=False, use_alpha_beta=True,
                   use_zobrist_hashing=False, max_ply=3,
                   special_static_eval_fn=None):
@@ -105,45 +121,78 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
         self.t_start = time.time()
 
-        old_state = self.current_state
-        self.current_state = current_state
+        old_state = copy.deepcopy(self.current_state)
+        self.current_state = cur_state
+        new_state = copy.deepcopy(self.current_state)
 
-        new_remark = "I need to think of something appropriate.\n" + \
-                     "Well, I guess I can say that this move is probably illegal."
+        minimax_depth = 3
 
-        print("Returning from make_move")
+        chosen_move = self.minimax(self.current_state,minimax_depth)
+
+        new_state.board[chosen_move[0]][chosen_move[1]] = self.current_state.whose_move
+
+        if self.current_state.whose_move == 'X': new_state.whose_move = 'O'
+        else: new_state.whose_move = 'X'
+
+        new_remark = "OK"
         return [[chosen_move, new_state], new_remark]
 
     # The main adversarial search function:
-    def minimax(self,
-                state,
-                depth_remaining,
-                pruning=False,
-                alpha=None,
-                beta=None):
-        print("Calling minimax. We need to implement its body.")
+    def minimax(self, state, max_depth, pruning=True, alpha=None, beta=None):
+        cur_depth = 0
 
-        if not pruning:
-            if depth_remaining == 0:
-                return self.static_eval(state,GAME_TYPE)
-            if state.whose_move == 'X':
-                prov = -100000
+        whose_move = state.whose_move
+        open_lst = [(state.board, cur_depth, whose_move)]
+
+        while open_lst:
+            cur_state = open_lst.pop(0)
+            cur_board = cur_state[0]
+            cur_board_hashable = tuple(map(tuple,cur_board))
+            cur_depth = cur_state[1]
+            whose_move = cur_state[2]
+            if cur_depth <= max_depth:
+                for space in self.states_dict[cur_board_hashable]['open_spaces']:
+                    new_board = copy.deepcopy(cur_board)
+                    new_board[space[0]][space[1]] = whose_move
+                    cur_k_in_a_rows = self.states_dict[cur_board_hashable]['k_in_a_rows']
+                    cur_open_spaces = self.states_dict[cur_board_hashable]['open_spaces']
+                    new_k_in_a_rows, new_open_spaces = eval_move((whose_move, space), cur_k_in_a_rows, self.space_assoc, cur_open_spaces)
+                    new_board_hashable = tuple(map(tuple, new_board))
+                    if new_board_hashable not in self.states_dict:
+                        self.states_dict.update({new_board_hashable: {'k_in_a_rows': new_k_in_a_rows,
+                                                                                'open_spaces': new_open_spaces,
+                                                                                'parents': [cur_board_hashable],
+                                                                                'whose_move': whose_move}})
+                    elif cur_board_hashable not in self.states_dict[new_board_hashable]['parents']:
+                        self.states_dict[new_board_hashable]['parents'].append(cur_board_hashable)
+
+                    if whose_move == 'X':
+                        whose_move_next = 'O'
+                    else:
+                        whose_move_next = 'X'
+                    open_lst.append((new_board,cur_depth+1,whose_move_next))
+
+
             else:
-                prov = 100000
-            for move in self.open_spaces:
-                if state.whose_move == 'X':
-                    eval_move(('X',move),self.k_in_a_rows,self.space_assoc,self.open_spaces)
-                elif state.whose_move == 'O':
-                    eval_move(('O',move),self.k_in_a_rows,self.space_assoc,self.open_spaces)
-           # for s in successors()
+                while open_lst:
+                    state = open_lst.pop(0)
+                    if type(state) == tuple:
+                        board = state[0]
+                        hashable_board = tuple(map(tuple,board))
+                    else:
+                        hashable_board = state
+                    if self.states_dict[hashable_board]['parents']:
+                        parents = self.states_dict[hashable_board]['parents']
+                        for parent in parents:
+                            open_lst.append((parent,0))
+                            if 'eval' in self.states_dict[parent]:
+                                if self.states_dict[parent]['eval'] < self.states_dict[hashable_board]['k_in_a_rows']['score']:
+                                    self.states_dict[parent]['eval'] = self.states_dict[hashable_board]['k_in_a_rows']['score']
+                            else:
+                                self.states_dict[parent]['eval'] = self.states_dict[hashable_board]['k_in_a_rows']['score']
 
-        default_score = 0  # Value of the passed-in state. Needs to be computed.
 
-        return [default_score, "my own optional stuff", "more of my stuff"]
-        # Only the score is required here but other stuff can be returned
-        # in the list, after the score, in case you want to pass info
-        # back from recursive calls that might be used in your utterances,
-        # etc.
+        return
 
     def static_eval(self, state, game_type=None, use_existing_KInARows=False, move=None):
         print('calling static_eval. Its value needs to be computed!')
@@ -151,27 +200,27 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         # lower when better for O.
 
         # Assumes K value of 3 if no game type specified
-        if game_type is None:
-            k = 3
-        else:
-            k = game_type.k
+        # if game_type is None:
+        #     k = 3
+        # else:
+        #     k = game_type.k
+        #
+        # if not use_existing_KInARows:
+        #     self.KInARows = {}
+        #     self.spaces = {}
+        #     self.current_state = state
+        # if not self.KInARows and not self.spaces:
+        #     self.find_possible_k_in_a_rows(state, k)
+        #
+        # if move is not None:
+        #     new_k_in_a_rows, new_space_assoc, new_open_spaces = eval_move(move, self.k_in_a_rows, self.space_assoc, self.open_spaces)
+        #
+        # # Find the total score from KInARows
+        # score = 0
+        # for k_in_a_row in self.KInARows:
+        #     score += k_in_a_row[1]
 
-        if not use_existing_KInARows:
-            self.KInARows = {}
-            self.spaces = {}
-            self.current_state = state
-        if not self.KInARows and not self.spaces:
-            self.find_possible_k_in_a_rows(state, k)
-
-        if move is not None:
-            new_k_in_a_rows, new_space_assoc, new_open_spaces = eval_move(move, self.k_in_a_rows, self.space_assoc, self.open_spaces)
-
-        # Find the total score from KInARows
-        score = 0
-        for k_in_a_row in self.KInARows:
-            score += k_in_a_row[1]
-
-        return score
+        return
 
     def find_possible_k_in_a_rows(self, state, k):
         board = []
@@ -210,7 +259,7 @@ def eval_move(move, k_in_a_rows, space_assoc, open_spaces):
                 del new_k_in_a_rows[k_in_a_row]
                 new_space_assoc[move[1]].remove(k_in_a_row)
     eval_k_in_a_rows(new_k_in_a_rows)
-    return new_k_in_a_rows, new_space_assoc, new_open_spaces
+    return new_k_in_a_rows, new_open_spaces
 
 def eval_k_in_a_rows(k_in_a_rows):
     cur_score = 0
@@ -377,8 +426,12 @@ def do_move(state, i, j, o):
 #  REPEAT_COUNT = 0 or a table of these if you are reusing different utterances
 if __name__ == '__main__':
 
+    cur_game = Cassini
+
     mocha = OurAgent()
-    mocha.prepare(FIAR,'X','fig')
+
+    mocha.prepare(cur_game,'X','fig')
+
     # fig = search_rows(Cassini.initial_state.board,5)[0]
     fig = mocha.k_in_a_rows
 
@@ -398,32 +451,54 @@ if __name__ == '__main__':
 
     print(count)
 
-    start = time.time()
+    start2 = time.time()
     puggle = eval_move(('X',(0,1)),fig,mocha.space_assoc,sam)
+    end2 = time.time()
     # x = eval_k_in_a_rows((puggle[0]))
-    end = time.time()
+
 
 
     print('new')
 
     puggle0 = puggle[0]
     puggle1 = puggle[1]
-    puggle2 = puggle[2]
 
     for entry in puggle0:
         print(str(entry) +"  ---  "+str(puggle0[entry]))
 
-    for entry in puggle1:
-        print(str(entry)+"  ---  "+str(puggle1[entry]))
 
-    for entry in puggle2:
+    for entry in puggle1:
         print(str(entry))
 
 
 
 
-    print(TTT.initial_state)
-    print((end - start) * 100000)
+    print(cur_game.initial_state)
+
+    print((end2-start2)*1000)
+
+    new_state = copy.deepcopy(cur_game.initial_state)
+    new_state.board[0][1] = "X"
+
+    start = time.time()
+    mocha.minimax(new_state, 3, pruning=True, alpha=None, beta=None)
+    end = time.time()
+
+
+
+    import sys
+
+    for state in mocha.states_dict:
+        print("----------------------------------")
+        for row in state:
+            print(row)
+
+    print((end - start) * 1000)
+    print(len(mocha.states_dict))
+
+
+    size_in_bytes = sys.getsizeof(mocha.states_dict)
+    print(f"The dictionary occupies {size_in_bytes} bytes")
 
 
 

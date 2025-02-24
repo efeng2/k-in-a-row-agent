@@ -172,7 +172,7 @@ def render_utterance(who, utterance):
 #def async_runGame():
 #    fut = ensure_future(runGame())
 
-WAIT_TIME_AFTER_MOVES = 0.01
+WAIT_TIME_AFTER_MOVES = .01
 def set_wait_time(t):
     global WAIT_TIME_AFTER_MOVES
     WAIT_TIME_AFTER_MOVES = float(t)
@@ -181,17 +181,17 @@ def test():
     # Stand-alone test
     print("Starting stand-alone test of GameMaster.py")
     # Edit this to change what version of K-in-a-Row is used.
-    set_game(TTT) # default is Tic-Tac-Toe
+    set_game(FIAR) # default is Tic-Tac-Toe
     #set_game(FIAR) # Five in a Row
     # Import 1 or 2 agent files here.
     # If using only 1, create 2 instances of it, one of
     # which is a "twin".
 
     #import yourUWNetID_KInARow as h
-    import RandomPlayer as h
+    import nshukla_KInARow as h
     import Agent_Copy as b
-    px = h.OurAgent()
-    po = b.OurAgent()
+    px = b.OurAgent()
+    po = h.OurAgent()
     set_players(px, po)
     print("Players are set.")
     print("Now let's run the game.")
