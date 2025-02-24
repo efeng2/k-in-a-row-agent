@@ -1,0 +1,33 @@
+
+
+1. Real Statistics Report
+
+Our agent can report it's statistics for the current move
+
+Example:
+
+Move is by X to (2, 2)
+TicTacTimes says:
+ Statistics Report:
+ Score of Last Move: 0
+ Number of States Evaluated: 1
+ Time Spent: 0.00013499998021870852 second(s)
+ Number of cutoffs: 0
+
+2. Story response to ”What’s your take on the game so
+far?” with prediction
+
+Our agent can tell a story with its past moves and the opponent's past moves. To get the opponent's past moves we scanned the board for differences between the current state and the last state to know where the opponent put its piece. The story dialog is told according to the past minimax values of the moves. (If the move is good or bad, it will generate response from the corresponding utterance bank.)
+
+Example:
+
+ Our Tic-Tac-Toe story:
+
+ I placed my mark in the center with (1, 1) —— textbook dominance. It’s super effective!
+ In a masterful display of strategy, I placed my mark at (1, 2). Analysts agree: this was a stroke of genius.
+ TicTacTimes II made a misstep at (1, 0)—this could be the turning point I needed.
+ Observers can only marvel at my brilliance. My move at (2, 0) reinforces my dominance over this game.
+ TicTacTimes II made a critical error at (0, 2). I see an opportunity!
+ With calculated precision, I secured (0, 1), shifting the momentum in my favor. This is my current move.
+
+3. We wish to enter the competition.
