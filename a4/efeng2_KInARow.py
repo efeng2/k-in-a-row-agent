@@ -1,8 +1,6 @@
 '''
-2135321_KInARow.py
-Authors: <your name(s) here, lastname first and partners separated by ";">
-  Example:  
-    Authors: Feng, Emily; Weston, Sam
+efeng2_KInARow.py
+Authors: Feng, Emily; Weston, Sam
 
 An agent for playing "K-in-a-Row with Forbidden Squares" and related games.
 CSE 415, University of Washington
