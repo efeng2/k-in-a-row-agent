@@ -1,10 +1,10 @@
 '''gameToHTML.py
-
+From CSE415 in University of Washington, Seattle
 '''
 f = None
 def startHTML(nickName1, nickName2, gameType, round=1):
     # Create a filename.
-    fn = clean(nickName1)+'-vs-'+clean(nickName2)+'-in-'+clean(gameType)+'-round-'+str(round)+'.html'
+    fn = 'transcripts/' + clean(nickName1)+'-vs-'+clean(nickName2)+'-in-'+clean(gameType)+'-round-'+str(round)+'.html'
     # To be added: Check for existing file by this name and create a new variation of it.
     global F
     try: F = open(fn, "w");
@@ -44,9 +44,9 @@ def stateToHTML(state, finished=False):
         html += "<tr>"
         for col in row:
             img = "gray32.png"
-            if col=='X': img = "X32.png"
-            elif col=='O': img = "O32.png"
-            elif col=="-": img = "black32.png"
+            if col=='X': img = "images/X32.png"
+            elif col=='O': img = "images/O32.png"
+            elif col=="-": img = "images/black32.png"
             html += "<td><img src=" + img + "></td>"
         html += "</tr>\n"
     html += "</table><br>\n"

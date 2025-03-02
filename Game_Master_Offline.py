@@ -188,10 +188,10 @@ def test():
     # which is a "twin".
 
     #import yourUWNetID_KInARow as h
-    import nshukla_KInARow as h
-    import Agent_Copy as b
-    px = b.OurAgent()
-    po = h.OurAgent()
+    import RandomPlayer as r
+    import efeng2_KInARow as a
+    px = r.OurAgent()
+    po = a.OurAgent()
     set_players(px, po)
     print("Players are set.")
     print("Now let's run the game.")
