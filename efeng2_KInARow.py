@@ -10,6 +10,9 @@ from agent_base import KAgent
 # from game_types import State, Game_Type
 import game_types
 from random import randint
+from openai import OpenAI
+import random
+from config import API_KEY
 
 AUTHORS = 'Sam Weston and Emily Feng' 
 
@@ -70,6 +73,7 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         # self.win = False
         # self.lose = False
         # self.tie = False
+        self.client = None
         
         self.XKInARows = []
         self.OKInARows = []
@@ -90,35 +94,34 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         expected_time_per_move = 0.1, # Time limits can be
                                       # changed mid-game by the game master.
 
-        utterances_matter=False):      # If False, just return 'OK' for each utterance,
+        utterances_matter=True):      # If False, just return 'OK' for each utterance,
                                       # or something simple and quick to compute
                                       # and do not import any LLM or special APIs.
                                       # During the tournament, this will be False..
-       if utterances_matter:
-           pass
-           # Optionally, import your LLM API here.
-           # Then you can use it to help create utterances.
 
-       self.who_i_play = what_side_to_play
-       self.opponent_nickname = opponent_nickname
-       self.time_limit = expected_time_per_move
-       global GAME_TYPE
-       GAME_TYPE = game_type
+        self.who_i_play = what_side_to_play
+        self.opponent_nickname = opponent_nickname
+        self.time_limit = expected_time_per_move
+        global GAME_TYPE
+        GAME_TYPE = game_type
 
-       global_game_type = game_type.long_name
-       if self.twin:
-           print(self.long_name + ": Oh, you want headlines? Hope you brought your A-game, because I'm about to make history!")
-       else:
-           print(self.long_name + ": Breaking news: A thrilling game of " + global_game_type + " is about to begin! You vs. me. Let's see who makes headlines.")
-       self.my_past_utterances = []
+        global_game_type = game_type.long_name
+        if self.twin:
+            print(self.long_name + ": Oh, you want headlines? Hope you brought your A-game, because I'm about to make history!")
+        else:
+            print(self.long_name + ": Breaking news: A thrilling game of " + global_game_type + " is about to begin! You vs. me. Let's see who makes headlines.")
+        self.my_past_utterances = []
 
-       self.utt_count = 0
-       if self.twin: self.utt_count = 5
-           
-       # Write code to save the relevant information in variables
-       # local to this instance of the agent.
-       # Game-type info can be in global variables.
-       return "OK"
+        self.utt_count = 0
+        if self.twin: self.utt_count = 5
+
+        if utterances_matter:
+            self.client = OpenAI(api_key=API_KEY, base_url="https://api.deepseek.com")
+            
+        # Write code to save the relevant information in variables
+        # local to this instance of the agent.
+        # Game-type info can be in global variables.
+        return "OK"
    
     # The core of your agent's ability should be implemented here:             
     def make_move(self, current_state, current_remark, time_limit=1000,
@@ -145,7 +148,6 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
 
         end_time = time.perf_counter()
         run_time = end_time - start_time
-
         myUtterance = self.nextUtterance(minimax_value, current_remark, run_time, GAME_TYPE.m, GAME_TYPE.n, newMove)
 
         # reset
@@ -168,129 +170,159 @@ class OurAgent(KAgent):  # Keep the class name "OurAgent" so a game master
         return [[newMove, newState], myUtterance]
     
     def nextUtterance(self, minimax_value, opponent_utt, run_time, m, n, move):
+        # Create a description of the current game state
+        game_state = (
+            f"Playing {m}x{n} tic-tac-toe. "
+            f"Last move was {move}. "
+            f"Minimax evaluation: {minimax_value}. "
+            f"Opponent said: '{opponent_utt}'. "
+            f"Calculation took {run_time} seconds."
+        )
 
         if opponent_utt == "Tell me how you did that":
-            utterance = '\n Statistics Report:'
-
-            # report
-            utterance += '\n Score of Last Move: ' + str(minimax_value)
-            utterance += '\n Number of States Evaluated: ' + str(self.num_states_eval)
-            utterance += '\n Time Spent: ' + str(run_time) + " second(s)"
-            utterance += '\n Number of cutoffs: ' + str(self.num_cutoffs)
-
-            self.num_states_eval = 0
-            self.num_cutoffs = 0
-
-            return utterance
-        elif opponent_utt == "What's your take on the game so far?":
-            utterance = '\n Our ' + global_game_type + ' story: \n'
-
-            # report
-            for i in range(0, len(self.past_moves), 2):
-                # I am star
-                utterance_bank_me = STORY_BRILLIANT_UTTERANCE_ME
-                utterance_bank_op = STORY_MISTAKE_UTTERANCE_OP
-
-                # special
-                if self.past_moves[i] == ((m-1)/2,(n-1)/2):
-                    utterance += "\n I placed my mark in the center with " + str((int((m-1)/2),int((n-1)/2))) + " —— textbook dominance. It’s super effective!"
-                else:
-                # if i play good
-                    if self.who_i_play == "X":
-                        if self.past_minimax_vals[i] >= 0:
-                            utterance_bank_me = STORY_BRILLIANT_UTTERANCE_ME
-                            utterance_bank_op = STORY_MISTAKE_UTTERANCE_OP
-                        else:
-                            utterance_bank_me = STORY_MISTAKE_UTTERANCE_ME
-                            utterance_bank_op = STORY_BRILLIANT_UTTERANCE_OP
-                    else:
-                        if self.past_minimax_vals[i] <= 0:
-                            utterance_bank_me = STORY_BRILLIANT_UTTERANCE_ME
-                            utterance_bank_op = STORY_MISTAKE_UTTERANCE_OP
-                        else:
-                            utterance_bank_me = STORY_MISTAKE_UTTERANCE_ME
-                            utterance_bank_op = STORY_BRILLIANT_UTTERANCE_OP
-                    
-                    n = len(utterance_bank_me)-1
-
-                    if self.who_i_play == "X":
-                        random_index = randint(0, n)
-                        utterance += utterance_bank_me[random_index].format(move=self.past_moves[i], opponent=self.opponent_nickname)
-                        if len(self.past_moves) > i+1:
-                            random_index = randint(0, n)
-                            utterance += utterance_bank_op[random_index].format(move=self.past_moves[i+1], opponent=self.opponent_nickname)
-            
-            # current
-            if self.who_i_play == "X":
-                #print(minimax_value)
-                if minimax_value >= 0:
-                    utterance_bank_me = STORY_BRILLIANT_UTTERANCE_ME
-                else:
-                    utterance_bank_me = STORY_MISTAKE_UTTERANCE_ME
-            else:
-                if minimax_value <= 0:
-                    utterance_bank_me = STORY_BRILLIANT_UTTERANCE_ME
-                else:
-                    utterance_bank_me = STORY_MISTAKE_UTTERANCE_ME
-
-            random_index = randint(0, n)
-            utterance += utterance_bank_me[random_index].format(move=move, opponent=self.opponent_nickname) + " This is my current move."
-
-            # predict who would win
-            if minimax_value > NUETRAL_THRESHOLD:
-                if self.who_i_play == "X":
-                    utterance += '\n \n Win Prediction: I think I, ' + self.long_name + ' will win!'
-                else:
-                    utterance += '\n \n Win Prediction: I think you, ' + self.opponent_nickname + ' will win...'
-            elif minimax_value < (- NUETRAL_THRESHOLD):
-                if self.who_i_play == "O":
-                    utterance += '\n \n Win Prediction: I think I, ' + self.long_name + ' will win!'
-                else:
-                    utterance += '\n \n Win Prediction: I think you, ' + self.opponent_nickname + ' will win...'
-            else:
-                utterance += '\n \n Win Prediction: The game is close, I think it is going to be a draw.'
-
-            return utterance
+            return game_state
+        
         else:
-            utterances = UTTERANCE_BANK
+            if self.client:
+                try:
+                    response = self.client.chat.completions.create(
+                        model="deepseek-chat",
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": "You're Tic-Tac-Times, a snarky tic-tac-toe commentator. "
+                                        "Respond with 1 witty line (15 words max). "
+                                        "Use game-related puns. Current board: {m}x{n}."
+                            },
+                            {"role": "user", "content": game_state}
+                        ],
+                        stream=False,
+                        max_tokens=30  # Limit response length
+                    )
+                    
+                    return f"TicTacTimes says: {response.choices[0].message.content}"
+                
+                except Exception as e:
+                    # Fallback responses when API fails
+                    fallback_responses = [
+                        "My snark module is offline, but I can still beat you!",
+                        "No quips today - let's focus on the game!",
+                        f"Move {move}? How... predictable.",
+                        "I'd make a joke, but this game is joke enough!"
+                    ]
+                    return f"TicTacTimes says: {random.choice(fallback_responses)}"
+            else:
+                return 'OK'
 
-            if self.who_i_play == "O":
-                minimax_value = - minimax_value
+        # elif opponent_utt == "What's your take on the game so far?":
+        #     utterance = '\n Our ' + global_game_type + ' story: \n'
 
-            # if self.win:
-            #     utterances = WIN_UTTERANCE
-            # elif self.lose:
-            #     utterances = LOSE_UTTERANCE
-            #special
-            if self.past_moves != [] and self.past_moves[len(self.past_moves)-1] == ((m-1)/2,(n-1)/2):
-                utterance += "Argh, the center is taken! You must be a professional..."
-                return utterance
-            elif self.utt_count < 1:
-                utterances = FIRST_UTTERANCE
-            # elif self.tie:
-            #     utterances = TIE_UTTERANCE
-            elif minimax_value > NUETRAL_THRESHOLD:
-                utterances = HAPPY_UTTERANCE
-            elif minimax_value < (- NUETRAL_THRESHOLD):
-                utterances = SAD_UTTERANCE
+        #     # report
+        #     for i in range(0, len(self.past_moves), 2):
+        #         # I am star
+        #         utterance_bank_me = STORY_BRILLIANT_UTTERANCE_ME
+        #         utterance_bank_op = STORY_MISTAKE_UTTERANCE_OP
 
-            n = len(utterances)
+        #         # special
+        #         if self.past_moves[i] == ((m-1)/2,(n-1)/2):
+        #             utterance += "\n I placed my mark in the center with " + str((int((m-1)/2),int((n-1)/2))) + " —— textbook dominance. It’s super effective!"
+        #         else:
+        #         # if i play good
+        #             if self.who_i_play == "X":
+        #                 if self.past_minimax_vals[i] >= 0:
+        #                     utterance_bank_me = STORY_BRILLIANT_UTTERANCE_ME
+        #                     utterance_bank_op = STORY_MISTAKE_UTTERANCE_OP
+        #                 else:
+        #                     utterance_bank_me = STORY_MISTAKE_UTTERANCE_ME
+        #                     utterance_bank_op = STORY_BRILLIANT_UTTERANCE_OP
+        #             else:
+        #                 if self.past_minimax_vals[i] <= 0:
+        #                     utterance_bank_me = STORY_BRILLIANT_UTTERANCE_ME
+        #                     utterance_bank_op = STORY_MISTAKE_UTTERANCE_OP
+        #                 else:
+        #                     utterance_bank_me = STORY_MISTAKE_UTTERANCE_ME
+        #                     utterance_bank_op = STORY_BRILLIANT_UTTERANCE_OP
+                    
+        #             n = len(utterance_bank_me)-1
+
+        #             if self.who_i_play == "X":
+        #                 random_index = randint(0, n)
+        #                 utterance += utterance_bank_me[random_index].format(move=self.past_moves[i], opponent=self.opponent_nickname)
+        #                 if len(self.past_moves) > i+1:
+        #                     random_index = randint(0, n)
+        #                     utterance += utterance_bank_op[random_index].format(move=self.past_moves[i+1], opponent=self.opponent_nickname)
             
-            random_index = randint(0, n-1)
-            this_utterance = utterances[random_index]
+        #     # current
+        #     if self.who_i_play == "X":
+        #         #print(minimax_value)
+        #         if minimax_value >= 0:
+        #             utterance_bank_me = STORY_BRILLIANT_UTTERANCE_ME
+        #         else:
+        #             utterance_bank_me = STORY_MISTAKE_UTTERANCE_ME
+        #     else:
+        #         if minimax_value <= 0:
+        #             utterance_bank_me = STORY_BRILLIANT_UTTERANCE_ME
+        #         else:
+        #             utterance_bank_me = STORY_MISTAKE_UTTERANCE_ME
 
-            # just in case for less repetition...
-            while this_utterance in self.my_past_utterances:
-                random_index = randint(0, n-1)
-                this_utterance = utterances[random_index]
+        #     random_index = randint(0, n)
+        #     utterance += utterance_bank_me[random_index].format(move=move, opponent=self.opponent_nickname) + " This is my current move."
 
-            self.my_past_utterances.append(this_utterance)
-            self.utt_count += 1
+        #     # predict who would win
+        #     if minimax_value > NUETRAL_THRESHOLD:
+        #         if self.who_i_play == "X":
+        #             utterance += '\n \n Win Prediction: I think I, ' + self.long_name + ' will win!'
+        #         else:
+        #             utterance += '\n \n Win Prediction: I think you, ' + self.opponent_nickname + ' will win...'
+        #     elif minimax_value < (- NUETRAL_THRESHOLD):
+        #         if self.who_i_play == "O":
+        #             utterance += '\n \n Win Prediction: I think I, ' + self.long_name + ' will win!'
+        #         else:
+        #             utterance += '\n \n Win Prediction: I think you, ' + self.opponent_nickname + ' will win...'
+        #     else:
+        #         utterance += '\n \n Win Prediction: The game is close, I think it is going to be a draw.'
 
-            if self.utt_count > len(UTTERANCE_BANK):
-                self.my_past_utterances = []
+        #     return utterance
+        # else:
+        #     utterances = UTTERANCE_BANK
 
-            return this_utterance
+        #     if self.who_i_play == "O":
+        #         minimax_value = - minimax_value
+
+        #     # if self.win:
+        #     #     utterances = WIN_UTTERANCE
+        #     # elif self.lose:
+        #     #     utterances = LOSE_UTTERANCE
+        #     #special
+        #     if self.past_moves != [] and self.past_moves[len(self.past_moves)-1] == ((m-1)/2,(n-1)/2):
+        #         utterance += "Argh, the center is taken! You must be a professional..."
+        #         return utterance
+        #     elif self.utt_count < 1:
+        #         utterances = FIRST_UTTERANCE
+        #     # elif self.tie:
+        #     #     utterances = TIE_UTTERANCE
+        #     elif minimax_value > NUETRAL_THRESHOLD:
+        #         utterances = HAPPY_UTTERANCE
+        #     elif minimax_value < (- NUETRAL_THRESHOLD):
+        #         utterances = SAD_UTTERANCE
+
+        #     n = len(utterances)
+            
+        #     random_index = randint(0, n-1)
+        #     this_utterance = utterances[random_index]
+
+        #     # just in case for less repetition...
+        #     while this_utterance in self.my_past_utterances:
+        #         random_index = randint(0, n-1)
+        #         this_utterance = utterances[random_index]
+
+        #     self.my_past_utterances.append(this_utterance)
+        #     self.utt_count += 1
+
+        #     if self.utt_count > len(UTTERANCE_BANK):
+        #         self.my_past_utterances = []
+
+        #     return this_utterance
    
 
     # The main adversarial search function:

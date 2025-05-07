@@ -2,8 +2,8 @@
 
 Authors: Feng, Emily; Weston, Sam
 
-An agent for playing "K-in-a-Row with Forbidden Squares" and related games.
-CSE 415, University of Washington
+An AI agent for playing "K-in-a-Row with Forbidden Squares" and related games.
+CSE 415, University of Washington. It uses minimax and alpha-beta pruning to serach what the next best move of the game is.
 
 Agent Name: TicTacTimes
 
