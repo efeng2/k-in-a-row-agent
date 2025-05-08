@@ -7,4 +7,10 @@ CSE 415, University of Washington. It uses minimax and alpha-beta pruning to ser
 
 Agent Name: TicTacTimes
 
-To run the agent, run `Game_Master_Offline.py`
+To run a textual version of the agent, run `Game_Master_Offline.py`
+A transcript of your game will be saved to `/transcripts`
+
+To run a web version of the game, run `python -m http.server` in terminal
+This will run your game on `localhost://8000`
+
+ (C) University of Washington, 2025

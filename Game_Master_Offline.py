@@ -190,8 +190,8 @@ def test():
     #import yourUWNetID_KInARow as h
     import RandomPlayer as r
     import efeng2_KInARow as a
-    px = r.OurAgent()
-    po = a.OurAgent()
+    px = a.OurAgent()
+    po = a.OurAgent(twin=True)
     set_players(px, po)
     print("Players are set.")
     print("Now let's run the game.")
